@@ -14,20 +14,27 @@ type UserBalanceModel struct {
 type TransactionHistoryModel struct {
 	TransactionID   string
 	UserID          string
-	TransactionType int
+	TransactionType TransactionType
 	Amount          int
 	CreatedAt       time.Time
 	UpdatedAt       time.Time
 }
 
+type TransactionType int
+
+const (
+    TypeAddUserBalance TransactionType = iota
+    TypeReduceUserBalance
+)
+
 type UserBalanceRepository interface {
 	GetUserBalanceByUserID(string) (UserBalanceModel, error)
-	AddUserBalanceByUserID(string, int) error
-	ReduceUserBalanceByUserID(string, int) error
+	AddUserBalanceByUserID(string, int, string) error
+	ReduceUserBalanceByUserID(string, int, string) error
 }
 
 type UserBalanceUsecase interface {
-	AddBalance(string, int) error
-	ReduceBalance(string, int) error
+	AddBalance(string, int, string) error
+	ReduceBalance(string, int, string) error
 	GetBalance(string) (int, error)
 }

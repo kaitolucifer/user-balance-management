@@ -73,6 +73,7 @@ type changeUserBalanceResponse struct {
 // changeUserBalanceResponseは残高を加減算するエンドポイントのリクエストフォーマット
 type ChangeUserBalanceRequest struct {
 	Amount int `json:"amount"`
+	TransactionID string `json:"transaction_id"`
 }
 
 func (h *UserBalanceHandler) ChangeUserBalance(w http.ResponseWriter, r *http.Request) {
@@ -106,10 +107,19 @@ func (h *UserBalanceHandler) ChangeUserBalance(w http.ResponseWriter, r *http.Re
 		return
 	}
 
+	if reqBody.TransactionID == "" {
+		resp.Status = "fail"
+		resp.Message = "transaction_id is empty"
+		out, _ := json.Marshal(resp)
+		w.WriteHeader(http.StatusBadRequest)
+		w.Write(out)
+		return
+	}
+
 	if change_type == "add" {
-		err = h.usecase.AddBalance(userID, reqBody.Amount)
+		err = h.usecase.AddBalance(userID, reqBody.Amount, reqBody.TransactionID)
 	} else {
-		err = h.usecase.ReduceBalance(userID, reqBody.Amount)
+		err = h.usecase.ReduceBalance(userID, reqBody.Amount, reqBody.TransactionID)
 	}
 
 	if err != nil {

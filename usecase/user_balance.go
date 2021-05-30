@@ -14,13 +14,13 @@ func NewUserBalanceUsecase(repo domain.UserBalanceRepository) domain.UserBalance
 	}
 }
 
-func (u *userBalanceUsecase) AddBalance(userID string, amount int) error {
+func (u *userBalanceUsecase) AddBalance(userID string, amount int, transactionID string) error {
 	_, err := u.repo.GetUserBalanceByUserID(userID)
 	if err != nil {
 		return err
 	}
 
-	err = u.repo.AddUserBalanceByUserID(userID, amount)
+	err = u.repo.AddUserBalanceByUserID(userID, amount, transactionID)
 	if err != nil {
 		return err
 	}
@@ -28,13 +28,13 @@ func (u *userBalanceUsecase) AddBalance(userID string, amount int) error {
 	return nil
 }
 
-func (u *userBalanceUsecase) ReduceBalance(userID string, amount int) error {
+func (u *userBalanceUsecase) ReduceBalance(userID string, amount int, transactionID string) error {
 	_, err := u.repo.GetUserBalanceByUserID(userID)
 	if err != nil {
 		return err
 	}
 
-	err = u.repo.ReduceUserBalanceByUserID(userID, amount)
+	err = u.repo.ReduceUserBalanceByUserID(userID, amount, transactionID)
 	if err != nil {
 		return err
 	}

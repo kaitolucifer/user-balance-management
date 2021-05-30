@@ -2,7 +2,6 @@ package infrastructure
 
 import (
 	"context"
-	"fmt"
 	"time"
 
 	"github.com/kaitolucifer/user-balance-management/domain"
@@ -36,29 +35,88 @@ func (repo *userBalanceRepository) GetUserBalanceByUserID(userId string) (domain
 	return userBalances, nil
 }
 
-func (repo *userBalanceRepository) AddUserBalanceByUserID(userID string, amount int) error {
+func (repo *userBalanceRepository) AddUserBalanceByUserID(userID string, amount int, transactionID string) error {
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
 
-	query := fmt.Sprintf(`UPDATE user_balance SET balance = balance + %d, updated_at = $1 WHERE user_id = $2`, amount)
-	_, err := repo.Conn.DB.ExecContext(ctx, query, time.Now(), userID)
+	tx, err := repo.Conn.DB.BeginTx(ctx, nil)
+
 	if err != nil {
 		return err
 	}
 
-	return nil
+	defer func() {
+		if err := recover(); err != nil {
+			tx.Rollback()
+		}
+	}()
+
+	update_query := `UPDATE user_balance SET balance = balance + $1, updated_at = $2 WHERE user_id = $3`
+	_, err = tx.ExecContext(ctx, update_query, amount, time.Now(), userID)
+	if err != nil {
+		tx.Rollback()
+		return err
+	}
+
+	insert_query := `INSERT INTO transaction_history (transaction_id, user_id, transaction_type, amount, created_at, updated_at)
+					 VALUES ($1, $2, $3, $4, $5, $6)`
+	_, err = tx.ExecContext(ctx, insert_query,
+		transactionID,
+		userID,
+		domain.TypeAddUserBalance,
+		amount,
+		time.Now(),
+		time.Now(),
+	)
+	if err != nil {
+		tx.Rollback()
+		return err
+	}
+
+	err = tx.Commit()
+
+	return err
 }
 
-func (repo *userBalanceRepository) ReduceUserBalanceByUserID(userID string, amount int) error {
+func (repo *userBalanceRepository) ReduceUserBalanceByUserID(userID string, amount int, transactionID string) error {
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
 
-	// 楽観ロックを使用
-	query := fmt.Sprintf(`UPDATE user_balance SET balance = balance - %[1]d, updated_at = $1 WHERE user_id = $2 AND balance - %[1]d > 0`, amount)
-	_, err := repo.Conn.DB.ExecContext(ctx, query, time.Now(), userID)
+	tx, err := repo.Conn.DB.BeginTx(ctx, nil)
+
 	if err != nil {
 		return err
 	}
 
-	return nil
+	defer func() {
+		if err := recover(); err != nil {
+			tx.Rollback()
+		}
+	}()
+
+	update_query := `UPDATE user_balance SET balance = balance - $1, updated_at = $2 WHERE user_id = $3 AND balance - $1 > 0`
+	_, err = tx.ExecContext(ctx, update_query, amount, time.Now(), userID)
+	if err != nil {
+		tx.Rollback()
+		return err
+	}
+
+	insert_query := `INSERT INTO transaction_history (transaction_id, user_id, transaction_type, amount, created_at, updated_at)
+					 VALUES ($1, $2, $3, $4, $5, $6)`
+	_, err = tx.ExecContext(ctx, insert_query,
+		transactionID,
+		userID,
+		domain.TypeReduceUserBalance,
+		amount,
+		time.Now(),
+		time.Now(),
+	)
+	if err != nil {
+		tx.Rollback()
+		return err
+	}
+
+	err = tx.Commit()
+
+	return err
 }
