@@ -8,7 +8,7 @@ type userBalanceUsecase struct {
 	repo domain.UserBalanceRepository
 }
 
-func NewUserBalanceUsecase(repo domain.UserBalanceRepository) *userBalanceUsecase {
+func NewUserBalanceUsecase(repo domain.UserBalanceRepository) domain.UserBalanceUsecase {
 	return &userBalanceUsecase{
 		repo: repo,
 	}
