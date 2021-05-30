@@ -1,0 +1,7 @@
+development:
+  dialect: postgres
+  database: user_balance
+  user: 
+  password: 
+  host: 
+  pool: 5
