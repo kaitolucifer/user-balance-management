@@ -1,6 +1,8 @@
 package usecase
 
 import (
+	"errors"
+
 	"github.com/kaitolucifer/user-balance-management/domain"
 )
 
@@ -29,9 +31,13 @@ func (u *userBalanceUsecase) AddBalance(userID string, amount int, transactionID
 }
 
 func (u *userBalanceUsecase) ReduceBalance(userID string, amount int, transactionID string) error {
-	_, err := u.repo.GetUserBalanceByUserID(userID)
+	userBalance, err := u.repo.GetUserBalanceByUserID(userID)
 	if err != nil {
 		return err
+	}
+
+	if userBalance.Balance-amount < 0 {
+		return errors.New("balance insufficient")
 	}
 
 	err = u.repo.ReduceUserBalanceByUserID(userID, amount, transactionID)
@@ -41,7 +47,6 @@ func (u *userBalanceUsecase) ReduceBalance(userID string, amount int, transactio
 
 	return nil
 }
-
 
 func (u *userBalanceUsecase) GetBalance(userID string) (int, error) {
 	userBalance, err := u.repo.GetUserBalanceByUserID(userID)
