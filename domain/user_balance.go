@@ -25,12 +25,14 @@ type TransactionType int
 const (
     TypeAddUserBalance TransactionType = iota
     TypeReduceUserBalance
+	TypeAddAllUserBalance
 )
 
 type UserBalanceRepository interface {
 	GetUserBalanceByUserID(string) (UserBalanceModel, error)
 	AddUserBalanceByUserID(string, int, string) error
 	ReduceUserBalanceByUserID(string, int, string) error
+	AddAllUserBalance(int, string) error
 }
 
 type UserBalanceUsecase interface {

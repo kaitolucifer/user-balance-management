@@ -120,3 +120,45 @@ func (repo *userBalanceRepository) ReduceUserBalanceByUserID(userID string, amou
 
 	return err
 }
+
+func (repo *userBalanceRepository) AddAllUserBalance(amount int, transactionID string) error {
+	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+	defer cancel()
+
+	tx, err := repo.Conn.DB.BeginTx(ctx, nil)
+
+	if err != nil {
+		return err
+	}
+
+	defer func() {
+		if err := recover(); err != nil {
+			tx.Rollback()
+		}
+	}()
+
+	update_query := `UPDATE user_balance SET balance = balance + $1, updated_at = $2`
+	_, err = tx.ExecContext(ctx, update_query, amount, time.Now())
+	if err != nil {
+		tx.Rollback()
+		return err
+	}
+
+	insert_query := `INSERT INTO transaction_history (transaction_id, transaction_type, amount, created_at, updated_at)
+					 VALUES ($1, $2, $3, $4, $5)`
+	_, err = tx.ExecContext(ctx, insert_query,
+		transactionID,
+		domain.TypeAddAllUserBalance,
+		amount,
+		time.Now(),
+		time.Now(),
+	)
+	if err != nil {
+		tx.Rollback()
+		return err
+	}
+
+	err = tx.Commit()
+
+	return err
+}
