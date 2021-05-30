@@ -8,11 +8,13 @@ import (
 
 type UserBalanceHandler struct {
 	usecase domain.UserBalanceUsecase
+	app     *App
 }
 
-func NewUserBalanceHander(usecase domain.UserBalanceUsecase) UserBalanceHandler {
+func NewUserBalanceHander(usecase domain.UserBalanceUsecase, app *App) UserBalanceHandler {
 	return UserBalanceHandler{
 		usecase: usecase,
+		app:     app,
 	}
 }
 
