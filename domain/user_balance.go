@@ -21,7 +21,7 @@ type TransactionHistoryModel struct {
 }
 
 type UserBalanceRepository interface {
-	GetUserBalanceByUserId(string) (UserBalanceModel, error)
+	GetUserBalanceByUserID(string) (UserBalanceModel, error)
 }
 
 type UserBalanceUsecase interface {

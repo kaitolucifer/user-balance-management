@@ -22,7 +22,7 @@ func (u *userBalanceUsecase) AddBalance(amount int) error {
 }
 
 func (u *userBalanceUsecase) GetBalance(userID string) (int, error) {
-	userBalance, err := u.repo.GetUserBalanceByUserId(userID)
+	userBalance, err := u.repo.GetUserBalanceByUserID(userID)
 
 	var balance int
 
