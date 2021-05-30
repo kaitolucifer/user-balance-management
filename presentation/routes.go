@@ -15,6 +15,7 @@ func Routes(handler UserBalanceHandler) http.Handler {
 	r.Get("/", handler.Home)
 	r.Get("/balance/{userID}", handler.UserBalance)
 	r.Patch("/balance/add/{userID}", handler.ChangeUserBalance)
+	r.Patch("/balance/reduce/{userID}", handler.ChangeUserBalance)
 
 	return r
 }

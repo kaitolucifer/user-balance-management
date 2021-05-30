@@ -28,6 +28,21 @@ func (u *userBalanceUsecase) AddBalance(userID string, amount int) error {
 	return nil
 }
 
+func (u *userBalanceUsecase) ReduceBalance(userID string, amount int) error {
+	_, err := u.repo.GetUserBalanceByUserID(userID)
+	if err != nil {
+		return err
+	}
+
+	err = u.repo.ReduceUserBalanceByUserID(userID, amount)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+
 func (u *userBalanceUsecase) GetBalance(userID string) (int, error) {
 	userBalance, err := u.repo.GetUserBalanceByUserID(userID)
 

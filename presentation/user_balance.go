@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"net/http"
 	"strconv"
+	"strings"
 
 	"github.com/go-chi/chi"
 	"github.com/kaitolucifer/user-balance-management/domain"
@@ -78,6 +79,9 @@ func (h *UserBalanceHandler) ChangeUserBalance(w http.ResponseWriter, r *http.Re
 	userID := chi.URLParam(r, "userID")
 	w.Header().Set("Content-Type", "application/json")
 
+	splited := strings.Split(r.RequestURI, "/")
+	change_type := splited[2] // 加算か減算かを示す部分
+
 	var resp changeUserBalanceResponse
 	var reqBody ChangeUserBalanceRequest
 
@@ -102,7 +106,12 @@ func (h *UserBalanceHandler) ChangeUserBalance(w http.ResponseWriter, r *http.Re
 		return
 	}
 
-	err = h.usecase.AddBalance(userID, reqBody.Amount)
+	if change_type == "add" {
+		err = h.usecase.AddBalance(userID, reqBody.Amount)
+	} else {
+		err = h.usecase.ReduceBalance(userID, reqBody.Amount)
+	}
+
 	if err != nil {
 		switch err {
 		case sql.ErrNoRows:
