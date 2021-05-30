@@ -41,7 +41,7 @@ func (repo *userBalanceRepository) AddUserBalanceByUserID(userID string, amount 
 	defer cancel()
 
 	query := fmt.Sprintf(`UPDATE user_balance SET balance = balance + %d, updated_at = $1 WHERE user_id = $2`, amount)
-	_, err := repo.Conn.DB.ExecContext(ctx, query, userID, time.Now())
+	_, err := repo.Conn.DB.ExecContext(ctx, query, time.Now(), userID)
 	if err != nil {
 		return err
 	}
