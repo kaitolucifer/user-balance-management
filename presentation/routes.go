@@ -13,6 +13,7 @@ func Routes(handler UserBalanceHandler) http.Handler {
 	r.Use(middleware.Recoverer)
 
 	r.Get("/", handler.Home)
+	r.Get("/balance/{userID}", handler.UserBalance)
 
 	return r
 }

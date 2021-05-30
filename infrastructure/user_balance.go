@@ -15,7 +15,7 @@ func NewUserBalanceRepository(db DB) domain.UserBalanceRepository {
 	return &userBalanceRepository{db}
 }
 
-func (repo *userBalanceRepository) GetUserBalanceByUserId(userId int) (domain.UserBalanceModel, error) {
+func (repo *userBalanceRepository) GetUserBalanceByUserId(userId string) (domain.UserBalanceModel, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
 
