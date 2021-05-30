@@ -63,21 +63,23 @@ func (h *UserBalanceHandler) UserBalance(w http.ResponseWriter, r *http.Request)
 	w.Write(out)
 }
 
-type AddUserBalanceResponse struct {
+// changeUserBalanceResponseは残高を加減算するエンドポイントのレスポンスフォーマット
+type changeUserBalanceResponse struct {
 	Status  string `json:"status"`
 	Message string `json:"message"`
 }
 
-type AddUserBalanceRequest struct {
+// changeUserBalanceResponseは残高を加減算するエンドポイントのリクエストフォーマット
+type ChangeUserBalanceRequest struct {
 	Amount int `json:"amount"`
 }
 
-func (h *UserBalanceHandler) AddUserBalance(w http.ResponseWriter, r *http.Request) {
+func (h *UserBalanceHandler) ChangeUserBalance(w http.ResponseWriter, r *http.Request) {
 	userID := chi.URLParam(r, "userID")
 	w.Header().Set("Content-Type", "application/json")
 
-	var resp AddUserBalanceResponse
-	var reqBody AddUserBalanceRequest
+	var resp changeUserBalanceResponse
+	var reqBody ChangeUserBalanceRequest
 
 	body := json.NewDecoder(r.Body)
 	err := body.Decode(&reqBody)

@@ -48,3 +48,17 @@ func (repo *userBalanceRepository) AddUserBalanceByUserID(userID string, amount 
 
 	return nil
 }
+
+func (repo *userBalanceRepository) ReduceUserBalanceByUserID(userID string, amount int) error {
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+
+	// 楽観ロックを使用
+	query := fmt.Sprintf(`UPDATE user_balance SET balance = balance - %[1]d, updated_at = $1 WHERE user_id = $2 AND balance - %[1]d > 0`, amount)
+	_, err := repo.Conn.DB.ExecContext(ctx, query, time.Now(), userID)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
