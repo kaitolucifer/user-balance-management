@@ -3,11 +3,13 @@ package presentation
 import (
 	"database/sql"
 	"encoding/json"
+	"errors"
 	"net/http"
 	"strconv"
 	"strings"
 
 	"github.com/go-chi/chi"
+	"github.com/jackc/pgconn"
 	"github.com/kaitolucifer/user-balance-management/domain"
 )
 
@@ -41,18 +43,25 @@ func (h *UserBalanceHandler) UserBalance(w http.ResponseWriter, r *http.Request)
 
 	balance, err := h.usecase.GetBalance(userID)
 	if err != nil {
-		switch err {
-		case sql.ErrNoRows:
-			resp.Status = "fail"
-			resp.Message = "user_id not found"
-			w.WriteHeader(http.StatusNotFound)
-		default:
-			h.app.ErrorLog.Println(err)
-			resp.Status = "error"
-			resp.Message = "internal server error"
-			w.WriteHeader(http.StatusInternalServerError)
+		var pgErr *pgconn.PgError
+		if errors.As(err, &pgErr) {
+			status, msg, httpCode := handlePgError(pgErr)
+			resp.Status = status
+			resp.Message = msg
+			w.WriteHeader(httpCode)
+		} else {
+			switch err {
+			case sql.ErrNoRows:
+				resp.Status = "fail"
+				resp.Message = "user_id not found"
+				w.WriteHeader(http.StatusNotFound)
+			default:
+				h.app.ErrorLog.Println(err)
+				resp.Status = "error"
+				resp.Message = "internal server error"
+				w.WriteHeader(http.StatusInternalServerError)
+			}
 		}
-
 		out, _ := json.Marshal(resp)
 		w.Write(out)
 		return
@@ -72,7 +81,7 @@ type changeUserBalanceResponse struct {
 
 // changeUserBalanceResponseは残高を加減算するエンドポイントのリクエストフォーマット
 type ChangeUserBalanceRequest struct {
-	Amount int `json:"amount"`
+	Amount        int    `json:"amount"`
 	TransactionID string `json:"transaction_id"`
 }
 
@@ -123,18 +132,25 @@ func (h *UserBalanceHandler) ChangeUserBalance(w http.ResponseWriter, r *http.Re
 	}
 
 	if err != nil {
-		switch err {
-		case sql.ErrNoRows:
-			resp.Status = "fail"
-			resp.Message = "user_id not found"
-			w.WriteHeader(http.StatusNotFound)
-		default:
-			h.app.ErrorLog.Println(err)
-			resp.Status = "error"
-			resp.Message = "internal server error"
-			w.WriteHeader(http.StatusInternalServerError)
+		var pgErr *pgconn.PgError
+		if errors.As(err, &pgErr) {
+			status, msg, httpCode := handlePgError(pgErr)
+			resp.Status = status
+			resp.Message = msg
+			w.WriteHeader(httpCode)
+		} else {
+			switch err {
+			case sql.ErrNoRows:
+				resp.Status = "fail"
+				resp.Message = "user_id not found"
+				w.WriteHeader(http.StatusNotFound)
+			default:
+				h.app.ErrorLog.Println(err)
+				resp.Status = "error"
+				resp.Message = "internal server error"
+				w.WriteHeader(http.StatusInternalServerError)
+			}
 		}
-
 		out, _ := json.Marshal(resp)
 		w.Write(out)
 		return
