@@ -2,6 +2,7 @@ package infrastructure
 
 import (
 	"context"
+	"fmt"
 	"time"
 
 	"github.com/kaitolucifer/user-balance-management/domain"
@@ -33,4 +34,17 @@ func (repo *userBalanceRepository) GetUserBalanceByUserID(userId string) (domain
 	}
 
 	return userBalances, nil
+}
+
+func (repo *userBalanceRepository) AddUserBalanceByUserID(userID string, amount int) error {
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+
+	query := fmt.Sprintf(`UPDATE user_balance SET balance = balance + %d, updated_at = $1 WHERE user_id = $2`, amount)
+	_, err := repo.Conn.DB.ExecContext(ctx, query, userID, time.Now())
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
