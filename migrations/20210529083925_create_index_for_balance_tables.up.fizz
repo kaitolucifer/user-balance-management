@@ -1,0 +1,1 @@
+add_index("user_balance", ["user_id", "balance"], {})

@@ -1,0 +1,1 @@
+drop_foreign_key("transaction_history", "transaction_history_user_balance_user_id_fk", {})
