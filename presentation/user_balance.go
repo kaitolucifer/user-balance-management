@@ -1,6 +1,7 @@
 package presentation
 
 import (
+	"database/sql"
 	"encoding/json"
 	"net/http"
 	"strconv"
@@ -39,9 +40,18 @@ func (h *UserBalanceHandler) UserBalance(w http.ResponseWriter, r *http.Request)
 
 	balance, err := h.usecase.GetBalance(userID)
 	if err != nil {
-		h.app.InfoLog.Println(err)
-		resp.Status = "fail"
-		resp.Message = err.Error()
+		switch err {
+		case sql.ErrNoRows:
+			resp.Status = "fail"
+			resp.Message = "user_id not found"
+			w.WriteHeader(http.StatusNotFound)
+		default:
+			h.app.ErrorLog.Println(err)
+			resp.Status = "error"
+			resp.Message = "internal server error"
+			w.WriteHeader(http.StatusInternalServerError)
+		}
+
 		out, _ := json.Marshal(resp)
 		w.Write(out)
 		return
@@ -92,10 +102,19 @@ func (h *UserBalanceHandler) AddUserBalance(w http.ResponseWriter, r *http.Reque
 
 	err = h.usecase.AddBalance(userID, reqBody.Amount)
 	if err != nil {
-		resp.Status = "fail"
-		resp.Message = err.Error()
+		switch err {
+		case sql.ErrNoRows:
+			resp.Status = "fail"
+			resp.Message = "user_id not found"
+			w.WriteHeader(http.StatusNotFound)
+		default:
+			h.app.ErrorLog.Println(err)
+			resp.Status = "error"
+			resp.Message = "internal server error"
+			w.WriteHeader(http.StatusInternalServerError)
+		}
+
 		out, _ := json.Marshal(resp)
-		w.WriteHeader(http.StatusNotFound)
 		w.Write(out)
 		return
 	}
