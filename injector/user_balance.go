@@ -22,7 +22,7 @@ func InjectUsecase(repo domain.UserBalanceRepository) domain.UserBalanceUsecase 
 	return usecase
 }
 
-func InjectHandler(service domain.UserBalanceUsecase) presentation.UserBalanceHandler {
-	handler := presentation.NewUserBalanceHander(service)
+func InjectHandler(usecase domain.UserBalanceUsecase, app *presentation.App) presentation.UserBalanceHandler {
+	handler := presentation.NewUserBalanceHander(usecase, app)
 	return handler
 }
