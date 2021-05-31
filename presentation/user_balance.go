@@ -2,6 +2,7 @@ package presentation
 
 import (
 	"encoding/json"
+	"log"
 	"net/http"
 	"strconv"
 	"strings"
@@ -10,15 +11,21 @@ import (
 	"github.com/kaitolucifer/user-balance-management/domain"
 )
 
+// App アプリケーションが持つコンポーネントや設定を格納
+type App struct {
+	InfoLog  *log.Logger
+	ErrorLog *log.Logger
+}
+
 type UserBalanceHandler struct {
 	usecase domain.UserBalanceUsecase
-	app     *App
+	App     *App
 }
 
 func NewUserBalanceHander(usecase domain.UserBalanceUsecase, app *App) UserBalanceHandler {
 	return UserBalanceHandler{
 		usecase: usecase,
-		app:     app,
+		App:     app,
 	}
 }
 
@@ -42,7 +49,7 @@ func (h *UserBalanceHandler) UserBalance(w http.ResponseWriter, r *http.Request)
 	if err != nil {
 		status, msg, httpCode := handleError(err)
 		if status == "error" {
-			h.app.ErrorLog.Println(err)
+			h.App.ErrorLog.Println(err)
 		}
 
 		resp.Status = status
@@ -120,9 +127,9 @@ func (h *UserBalanceHandler) ChangeUserBalance(w http.ResponseWriter, r *http.Re
 	if err != nil {
 		status, msg, httpCode := handleError(err)
 		if status == "error" {
-			h.app.ErrorLog.Println(err)
+			h.App.ErrorLog.Println(err)
 		}
-		
+
 		resp.Status = status
 		resp.Message = msg
 		w.WriteHeader(httpCode)

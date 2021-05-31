@@ -1,19 +1,19 @@
 package main
 
 import (
-	"log"
 	"net/http"
 )
 
 const portNumber = ":8080"
 
 func main() {
-	handler := NewHandler()
-	log.Printf("Starting application on port %s\n", portNumber)
+	configApp()
+	defer db.Close()
+	handler.App.InfoLog.Printf("starting application on port %s\n", portNumber)
 	srv := &http.Server{
 		Addr:    portNumber,
-		Handler: handler,
+		Handler: mux,
 	}
 
-	log.Fatal(srv.ListenAndServe())
+	handler.App.ErrorLog.Fatal(srv.ListenAndServe())
 }
