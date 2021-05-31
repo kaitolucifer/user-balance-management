@@ -2,6 +2,7 @@ package infrastructure
 
 import (
 	"context"
+	"errors"
 	"time"
 
 	"github.com/kaitolucifer/user-balance-management/domain"
@@ -15,24 +16,24 @@ func NewUserBalanceRepository(db DB) domain.UserBalanceRepository {
 	return &userBalanceRepository{db}
 }
 
-func (repo *userBalanceRepository) GetUserBalanceByUserID(userId string) (domain.UserBalanceModel, error) {
+func (repo *userBalanceRepository) GetUserBalanceByUserID(userID string) (domain.UserBalanceModel, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
 
-	var userBalances domain.UserBalanceModel
+	var userBalance domain.UserBalanceModel
 
-	row := repo.Conn.DB.QueryRowContext(ctx, "SELECT * FROM user_balance WHERE user_id = $1", userId)
+	row := repo.Conn.DB.QueryRowContext(ctx, "SELECT * FROM user_balance WHERE user_id = $1", userID)
 	err := row.Scan(
-		&userBalances.UserID,
-		&userBalances.Balance,
-		&userBalances.CreatedAt,
-		&userBalances.UpdatedAt,
+		&userBalance.UserID,
+		&userBalance.Balance,
+		&userBalance.CreatedAt,
+		&userBalance.UpdatedAt,
 	)
 	if err != nil {
-		return userBalances, err
+		return userBalance, err
 	}
 
-	return userBalances, nil
+	return userBalance, nil
 }
 
 func (repo *userBalanceRepository) AddUserBalanceByUserID(userID string, amount int, transactionID string) error {
@@ -52,10 +53,19 @@ func (repo *userBalanceRepository) AddUserBalanceByUserID(userID string, amount 
 	}()
 
 	update_query := `UPDATE user_balance SET balance = balance + $1, updated_at = $2 WHERE user_id = $3`
-	_, err = tx.ExecContext(ctx, update_query, amount, time.Now(), userID)
+	res, err := tx.ExecContext(ctx, update_query, amount, time.Now(), userID)
 	if err != nil {
 		tx.Rollback()
 		return err
+	}
+	num, err := res.RowsAffected()
+	if err != nil {
+		tx.Rollback()
+		return err
+	}
+	if num == 0 {
+		// 更新するタイミングでユーザーが消滅した場合
+		return errors.New("update failed")
 	}
 
 	insert_query := `INSERT INTO transaction_history (transaction_id, user_id, transaction_type, amount, created_at, updated_at)
@@ -95,10 +105,19 @@ func (repo *userBalanceRepository) ReduceUserBalanceByUserID(userID string, amou
 	}()
 
 	update_query := `UPDATE user_balance SET balance = balance - $1, updated_at = $2 WHERE user_id = $3 AND balance - $1 > 0`
-	_, err = tx.ExecContext(ctx, update_query, amount, time.Now(), userID)
+	res, err := tx.ExecContext(ctx, update_query, amount, time.Now(), userID)
 	if err != nil {
 		tx.Rollback()
 		return err
+	}
+	num, err := res.RowsAffected()
+	if err != nil {
+		tx.Rollback()
+		return err
+	}
+	if num == 0 {
+		// 更新するタイミングでユーザーが消滅または減算後残高が負の場合
+		return errors.New("update failed")
 	}
 
 	insert_query := `INSERT INTO transaction_history (transaction_id, user_id, transaction_type, amount, created_at, updated_at)

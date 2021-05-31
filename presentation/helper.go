@@ -38,6 +38,11 @@ func handleError(err error) (string, string, int) {
 			status = "fail"
 			msg = "user balance is insufficient"
 			httpCode = http.StatusUnprocessableEntity
+		} else if err.Error() == "update failed"{
+			// データ競合が発生
+			status = "fail"
+			msg = "update failed, please retry"
+			httpCode = http.StatusConflict
 		} else {
 			status = "error"
 			msg = "internal server error"
