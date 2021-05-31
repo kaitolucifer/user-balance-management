@@ -48,6 +48,10 @@ func (u *userBalanceUsecase) ReduceBalance(userID string, amount int, transactio
 	return nil
 }
 
+func (u *userBalanceUsecase) AddAllUserBalance(amount int, transactionID string) error {
+	return u.repo.AddAllUserBalance(amount, transactionID)
+}
+
 func (u *userBalanceUsecase) GetBalance(userID string) (int, error) {
 	userBalance, err := u.repo.GetUserBalanceByUserID(userID)
 

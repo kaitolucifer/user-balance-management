@@ -38,5 +38,6 @@ type UserBalanceRepository interface {
 type UserBalanceUsecase interface {
 	AddBalance(string, int, string) error
 	ReduceBalance(string, int, string) error
+	AddAllUserBalance(int, string) error
 	GetBalance(string) (int, error)
 }

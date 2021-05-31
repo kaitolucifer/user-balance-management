@@ -160,3 +160,63 @@ func (h *UserBalanceHandler) ChangeUserBalance(w http.ResponseWriter, r *http.Re
 	w.WriteHeader(http.StatusOK)
 	w.Write(out)
 }
+
+
+func (h *UserBalanceHandler) AddAllUserBalance(w http.ResponseWriter, r *http.Request) {
+	var resp changeUserBalanceResponse
+	var req ChangeUserBalanceRequest
+
+	body, err := ioutil.ReadAll(r.Body)
+	if err != nil {
+		resp.Status = "fail"
+		resp.Message = "request body is invalid"
+		out, _ := json.Marshal(resp)
+		w.WriteHeader(http.StatusBadRequest)
+		w.Write(out)
+		return
+	}
+
+	err = json.Unmarshal(body, &req)
+	if err != nil {
+		resp.Status = "fail"
+		resp.Message = "request body's JSON format is invalid (amount: int, transaction_id: string)"
+		out, _ := json.Marshal(resp)
+		w.WriteHeader(http.StatusBadRequest)
+		w.Write(out)
+		return
+	}
+
+	v := getValidator()
+	if err := v.Struct(req); err != nil {
+		resp.Status = "fail"
+		invalidFields := []string{}
+		for _, validErr := range err.(validator.ValidationErrors) {
+			invalidFields = append(invalidFields, validErr.Field())
+		}
+		resp.Message = strings.Join(invalidFields, ", ") + " is requreid"
+		out, _ := json.Marshal(resp)
+		w.WriteHeader(http.StatusBadRequest)
+		w.Write(out)
+		return
+	}
+	err = h.usecase.AddAllUserBalance(req.Amount, req.TransactionID)
+	if err != nil {
+		status, msg, httpCode := handleError(err)
+		if status == "error" {
+			h.App.ErrorLog.Println(err)
+		}
+
+		resp.Status = status
+		resp.Message = msg
+		w.WriteHeader(httpCode)
+		out, _ := json.Marshal(resp)
+		w.Write(out)
+		return
+	}
+
+	resp.Status = "success"
+	resp.Message = "user balance added successfully"
+	out, _ := json.Marshal(resp)
+	w.WriteHeader(http.StatusOK)
+	w.Write(out)
+}
