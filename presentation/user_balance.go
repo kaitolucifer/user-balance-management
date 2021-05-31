@@ -2,12 +2,14 @@ package presentation
 
 import (
 	"encoding/json"
+	"io/ioutil"
 	"log"
 	"net/http"
 	"strconv"
 	"strings"
 
 	"github.com/go-chi/chi"
+	"github.com/go-playground/validator/v10"
 	"github.com/kaitolucifer/user-balance-management/domain"
 )
 
@@ -63,19 +65,20 @@ func (h *UserBalanceHandler) UserBalance(w http.ResponseWriter, r *http.Request)
 	resp.Status = "success"
 	resp.Balance = strconv.Itoa(balance)
 	out, _ := json.Marshal(resp)
+	w.WriteHeader(http.StatusOK)
 	w.Write(out)
 }
 
-// changeUserBalanceResponseは残高を加減算するエンドポイントのレスポンスフォーマット
+// changeUserBalanceResponse 残高を加減算するエンドポイントのレスポンスフォーマット
 type changeUserBalanceResponse struct {
 	Status  string `json:"status"`
 	Message string `json:"message"`
 }
 
-// changeUserBalanceResponseは残高を加減算するエンドポイントのリクエストフォーマット
+// changeUserBalanceResponse 残高を加減算するエンドポイントのリクエストフォーマット
 type ChangeUserBalanceRequest struct {
-	Amount        int    `json:"amount"`
-	TransactionID string `json:"transaction_id"`
+	Amount        int    `json:"amount" validate:"required"`
+	TransactionID string `json:"transaction_id" validate:"required"`
 }
 
 func (h *UserBalanceHandler) ChangeUserBalance(w http.ResponseWriter, r *http.Request) {
@@ -86,42 +89,55 @@ func (h *UserBalanceHandler) ChangeUserBalance(w http.ResponseWriter, r *http.Re
 	change_type := splited[2] // 加算か減算かを示す部分
 
 	var resp changeUserBalanceResponse
-	var reqBody ChangeUserBalanceRequest
+	var req ChangeUserBalanceRequest
 
-	body := json.NewDecoder(r.Body)
-	err := body.Decode(&reqBody)
-
+	body, err := ioutil.ReadAll(r.Body)
 	if err != nil {
 		resp.Status = "fail"
-		resp.Message = "request body is not valid"
+		resp.Message = "request body is invalid"
 		out, _ := json.Marshal(resp)
 		w.WriteHeader(http.StatusBadRequest)
 		w.Write(out)
 		return
 	}
 
-	if reqBody.Amount <= 0 {
+	err = json.Unmarshal(body, &req)
+	if err != nil {
+		resp.Status = "fail"
+		resp.Message = "request body's JSON format is invalid (amount: int, transaction_id: string)"
+		out, _ := json.Marshal(resp)
+		w.WriteHeader(http.StatusBadRequest)
+		w.Write(out)
+		return
+	}
+
+	v := getValidator()
+	if err := v.Struct(req); err != nil {
+		resp.Status = "fail"
+		invalidFields := []string{}
+		for _, validErr := range err.(validator.ValidationErrors) {
+			invalidFields = append(invalidFields, validErr.Field())
+		}
+		resp.Message = strings.Join(invalidFields, ", ") + " is requreid"
+		out, _ := json.Marshal(resp)
+		w.WriteHeader(http.StatusBadRequest)
+		w.Write(out)
+		return
+	}
+
+	if req.Amount <= 0 {
 		resp.Status = "fail"
 		resp.Message = "amount is non-positive number"
 		out, _ := json.Marshal(resp)
-		w.WriteHeader(http.StatusBadRequest)
-		w.Write(out)
-		return
-	}
-
-	if reqBody.TransactionID == "" {
-		resp.Status = "fail"
-		resp.Message = "transaction_id is empty"
-		out, _ := json.Marshal(resp)
-		w.WriteHeader(http.StatusBadRequest)
+		w.WriteHeader(http.StatusUnprocessableEntity)
 		w.Write(out)
 		return
 	}
 
 	if change_type == "add" {
-		err = h.usecase.AddBalance(userID, reqBody.Amount, reqBody.TransactionID)
+		err = h.usecase.AddBalance(userID, req.Amount, req.TransactionID)
 	} else {
-		err = h.usecase.ReduceBalance(userID, reqBody.Amount, reqBody.TransactionID)
+		err = h.usecase.ReduceBalance(userID, req.Amount, req.TransactionID)
 	}
 
 	if err != nil {

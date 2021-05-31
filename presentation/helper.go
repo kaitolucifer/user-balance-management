@@ -4,7 +4,10 @@ import (
 	"database/sql"
 	"errors"
 	"net/http"
+	"reflect"
+	"strings"
 
+	"github.com/go-playground/validator/v10"
 	"github.com/jackc/pgconn"
 )
 
@@ -20,7 +23,7 @@ func handleError(err error) (string, string, int) {
 		case "23505":
 			msg = "transaction_id must be unique"
 			status = "fail"
-			httpCode = http.StatusBadRequest
+			httpCode = http.StatusUnprocessableEntity
 		default:
 			msg = "database error"
 			status = "error"
@@ -34,7 +37,7 @@ func handleError(err error) (string, string, int) {
 		} else if err.Error() == "balance insufficient" {
 			status = "fail"
 			msg = "user balance is insufficient"
-			httpCode = http.StatusBadRequest
+			httpCode = http.StatusUnprocessableEntity
 		} else {
 			status = "error"
 			msg = "internal server error"
@@ -44,3 +47,16 @@ func handleError(err error) (string, string, int) {
 
 	return status, msg, httpCode
 }
+
+func getValidator() *validator.Validate {
+	v := validator.New()
+	v.RegisterTagNameFunc(func(fld reflect.StructField) string {
+		name := strings.SplitN(fld.Tag.Get("json"), ",", 2)[0]
+		if name == "-" {
+			return ""
+		}
+		return name
+	})
+	return v
+}
+
