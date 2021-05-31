@@ -13,11 +13,11 @@ type DB struct {
 	*sql.DB
 }
 
-const maxOpenDbConn = 10
-const maxIdleDbConn = 5
-const maxDbLifetime = 5 * time.Minute
+const maxOpenDBConn = 10
+const maxIdleDBConn = 5
+const maxDBLifetime = 5 * time.Minute
 
-// NewDatabase creates a new database pool for the application
+// NewDatabase 新しいPostgresDBの接続プールを作成
 func NewDatabase(dsn string) *DB {
 	conn, err := sql.Open("pgx", dsn)
 	if err != nil {
@@ -28,9 +28,9 @@ func NewDatabase(dsn string) *DB {
 		panic(err)
 	}
 
-	conn.SetMaxOpenConns(maxOpenDbConn)
-	conn.SetMaxIdleConns(maxIdleDbConn)
-	conn.SetConnMaxLifetime(maxDbLifetime)
+	conn.SetMaxOpenConns(maxOpenDBConn)
+	conn.SetMaxIdleConns(maxIdleDBConn)
+	conn.SetConnMaxLifetime(maxDBLifetime)
 
 	return &DB{conn}
 }
