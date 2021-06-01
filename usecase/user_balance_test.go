@@ -125,7 +125,9 @@ func TestAddBalance(t *testing.T) {
 		t.Run(c.Name, func(t *testing.T) {
 			err := usecase.AddBalance(c.UserID, c.Amount, c.TransactionID)
 			if err != nil {
-				if err.Error() != c.ErrMsg {
+				if c.ErrMsg == "" {
+					t.Errorf("expected no error but got %s", err)
+				} else if err.Error() != c.ErrMsg {
 					t.Errorf("expected error: %s, got %s", c.ErrMsg, err)
 				}
 			} else {
@@ -155,12 +157,14 @@ func TestReduceBalance(t *testing.T) {
 		t.Run(c.Name, func(t *testing.T) {
 			err := usecase.ReduceBalance(c.UserID, c.Amount, c.TransactionID)
 			if err != nil {
-				if err.Error() != c.ErrMsg {
+				if c.ErrMsg == "" {
+					t.Errorf("expected no error but got %s", err)
+				} else if err.Error() != c.ErrMsg {
 					t.Errorf("expected error: %s, got %s", c.ErrMsg, err)
 				}
 			} else {
 				if c.ErrMsg != "" {
-					t.Errorf("expected no error but got %s", err)
+					t.Errorf("expected error: %s but got no one", c.ErrMsg)
 				}
 			}
 		})
@@ -182,12 +186,14 @@ func TestAddAllUserBalance(t *testing.T) {
 		t.Run(c.Name, func(t *testing.T) {
 			err := usecase.AddAllUserBalance(c.Amount, c.TransactionID)
 			if err != nil {
-				if err.Error() != c.ErrMsg {
+				if c.ErrMsg == "" {
+					t.Errorf("expected no error but got %s", err)
+				} else if err.Error() != c.ErrMsg {
 					t.Errorf("expected error: %s, got %s", c.ErrMsg, err)
 				}
 			} else {
 				if c.ErrMsg != "" {
-					t.Errorf("expected no error but got %s", err)
+					t.Errorf("expected error: %s but got no one", c.ErrMsg)
 				}
 			}
 		})
