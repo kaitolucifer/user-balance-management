@@ -15,7 +15,7 @@ type DB struct {
 
 const maxOpenDBConn = 10
 const maxIdleDBConn = 5
-const maxDBLifetime = 5 * time.Minute
+const maxDBConnLifetime = 5 * time.Minute
 
 // NewDatabase 新しいPostgresDBの接続プールを作成
 func NewDatabase(dsn string) *DB {
@@ -30,7 +30,7 @@ func NewDatabase(dsn string) *DB {
 
 	conn.SetMaxOpenConns(maxOpenDBConn)
 	conn.SetMaxIdleConns(maxIdleDBConn)
-	conn.SetConnMaxLifetime(maxDBLifetime)
+	conn.SetConnMaxLifetime(maxDBConnLifetime)
 
 	return &DB{conn}
 }

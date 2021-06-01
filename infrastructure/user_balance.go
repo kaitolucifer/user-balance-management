@@ -42,7 +42,6 @@ func (repo *userBalanceRepository) AddUserBalanceByUserID(userID string, amount 
 	defer cancel()
 
 	tx, err := repo.Conn.DB.BeginTx(ctx, nil)
-
 	if err != nil {
 		return err
 	}
@@ -94,7 +93,6 @@ func (repo *userBalanceRepository) ReduceUserBalanceByUserID(userID string, amou
 	defer cancel()
 
 	tx, err := repo.Conn.DB.BeginTx(ctx, nil)
-
 	if err != nil {
 		return err
 	}
@@ -146,7 +144,6 @@ func (repo *userBalanceRepository) AddAllUserBalance(amount int, transactionID s
 	defer cancel()
 
 	tx, err := repo.Conn.DB.BeginTx(ctx, nil)
-
 	if err != nil {
 		return err
 	}
