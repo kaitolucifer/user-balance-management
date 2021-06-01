@@ -53,6 +53,16 @@ func (repo *mockRepository) GetUserBalanceByUserID(userID string) (domain.UserBa
 }
 
 func (repo *mockRepository) AddUserBalanceByUserID(userID string, amount int, transactionID string) error {
+	userExist := false
+	for _, ub := range repo.userBalance {
+		if ub.UserID == userID {
+			userExist = true
+		}
+	}
+	if !userExist {
+		return errors.New("user not found")
+	}
+
 	for _, th := range repo.transactionHistory {
 		if th.TransactionID == transactionID {
 			return errors.New("duplicated transaction_id")
@@ -120,7 +130,7 @@ func TestAddBalance(t *testing.T) {
 				}
 			} else {
 				if c.ErrMsg != "" {
-					t.Errorf("expected no error but got %s", err)
+					t.Errorf("expected error: %s but got no one", c.ErrMsg)
 				}
 			}
 		})

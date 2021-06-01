@@ -2,6 +2,7 @@ package infrastructure
 
 import (
 	"context"
+	"database/sql"
 	"errors"
 	"time"
 
@@ -58,14 +59,14 @@ func (repo *userBalanceRepository) AddUserBalanceByUserID(userID string, amount 
 		tx.Rollback()
 		return err
 	}
-	num, err := res.RowsAffected()
+	numRow, err := res.RowsAffected()
 	if err != nil {
 		tx.Rollback()
 		return err
 	}
-	if num == 0 {
-		// 更新するタイミングでユーザーが消滅した場合
-		return errors.New("update failed")
+	if numRow == 0 {
+		// 更新する時点でユーザーが存在しない場合
+		return sql.ErrNoRows
 	}
 
 	insert_query := `INSERT INTO transaction_history (transaction_id, user_id, transaction_type, amount, created_at, updated_at)
@@ -110,13 +111,13 @@ func (repo *userBalanceRepository) ReduceUserBalanceByUserID(userID string, amou
 		tx.Rollback()
 		return err
 	}
-	num, err := res.RowsAffected()
+	numRow, err := res.RowsAffected()
 	if err != nil {
 		tx.Rollback()
 		return err
 	}
-	if num == 0 {
-		// 更新するタイミングでユーザーが消滅または減算後残高が負の場合
+	if numRow == 0 {
+		// 更新する時点でユーザーが存在しないまたは減算後残高が負の場合
 		return errors.New("update failed")
 	}
 
