@@ -24,15 +24,16 @@ type UserBalanceHandler struct {
 	App     *App
 }
 
-func NewUserBalanceHander(usecase domain.UserBalanceUsecase, app *App) UserBalanceHandler {
-	return UserBalanceHandler{
+func NewUserBalanceHander(usecase domain.UserBalanceUsecase, app *App) *UserBalanceHandler {
+	return &UserBalanceHandler{
 		usecase: usecase,
 		App:     app,
 	}
 }
 
-func (h *UserBalanceHandler) Home(w http.ResponseWriter, r *http.Request) {
-	w.Write([]byte("Hello world"))
+func (h *UserBalanceHandler) HealthCheck(w http.ResponseWriter, r *http.Request) {
+	resp := []byte(`{"status": "success", "message": "healthy"}`)
+	w.Write(resp)
 }
 
 type userBalanceResponse struct {
@@ -41,7 +42,7 @@ type userBalanceResponse struct {
 	Balance string `json:"balance,omitempty"`
 }
 
-func (h *UserBalanceHandler) UserBalance(w http.ResponseWriter, r *http.Request) {
+func (h *UserBalanceHandler) GetUserBalance(w http.ResponseWriter, r *http.Request) {
 	userID := chi.URLParam(r, "userID")
 	w.Header().Set("Content-Type", "application/json")
 
