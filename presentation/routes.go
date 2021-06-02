@@ -7,6 +7,7 @@ import (
 	"github.com/go-chi/chi/middleware"
 )
 
+// Routes chiを使用してHTTP用のmultiplexerを作成する
 func Routes(handler *UserBalanceHandler) http.Handler {
 	r := chi.NewRouter()
 
