@@ -44,13 +44,9 @@ func (u *userBalanceUsecase) AddAllUserBalance(amount int, transactionID string)
 
 func (u *userBalanceUsecase) GetBalance(userID string) (int, error) {
 	userBalance, err := u.repo.GetUserBalanceByUserID(userID)
-
-	var balance int
-
 	if err != nil {
-		return balance, err
+		return 0, err
 	}
 
-	balance = userBalance.Balance
-	return balance, nil
+	return userBalance.Balance, nil
 }

@@ -15,7 +15,7 @@ type mockRepository struct {
 }
 
 func NewMockRepository() domain.UserBalanceRepository {
-	mockUserBalances := []domain.UserBalanceModel{
+	userBalances := []domain.UserBalanceModel{
 		{UserID: "test_user1", Balance: 10000, CreatedAt: time.Now(), UpdatedAt: time.Now()},
 		{UserID: "test_user2", Balance: 20000, CreatedAt: time.Now(), UpdatedAt: time.Now()},
 		{UserID: "test_user3", Balance: 30000, CreatedAt: time.Now(), UpdatedAt: time.Now()},
@@ -23,7 +23,7 @@ func NewMockRepository() domain.UserBalanceRepository {
 		{UserID: "test_user5", Balance: 50000, CreatedAt: time.Now(), UpdatedAt: time.Now()},
 	}
 
-	mockTransactionHistory := []domain.TransactionHistoryModel{
+	transactionHistory := []domain.TransactionHistoryModel{
 		{
 			TransactionID:   "b8eb7ccc-6bc3-4be3-b7f8-e2701bf19a6b",
 			UserID:          "test_user1",
@@ -35,8 +35,8 @@ func NewMockRepository() domain.UserBalanceRepository {
 	}
 
 	return &mockRepository{
-		userBalance:        mockUserBalances,
-		transactionHistory: mockTransactionHistory,
+		userBalance:        userBalances,
+		transactionHistory: transactionHistory,
 	}
 }
 
@@ -110,11 +110,11 @@ func TestMain(m *testing.M) {
 
 func TestAddBalance(t *testing.T) {
 	cases := []struct {
-		Name          string
-		UserID        string
-		Amount        int
-		TransactionID string
-		ErrMsg        string
+		Name           string
+		UserID         string
+		Amount         int
+		TransactionID  string
+		ExpectedErrMsg string
 	}{
 		{"existent user", "test_user1", 10000, "917cd5c0-0bfc-4283-bc88-b5de8ad13635", ""},
 		{"duplicated transaction_id", "test_user5", 50000, "b8eb7ccc-6bc3-4be3-b7f8-e2701bf19a6b", "duplicated transaction_id"},
@@ -125,14 +125,14 @@ func TestAddBalance(t *testing.T) {
 		t.Run(c.Name, func(t *testing.T) {
 			err := usecase.AddBalance(c.UserID, c.Amount, c.TransactionID)
 			if err != nil {
-				if c.ErrMsg == "" {
-					t.Errorf("expected no error but got %s", err)
-				} else if err.Error() != c.ErrMsg {
-					t.Errorf("expected error: %s, got %s", c.ErrMsg, err)
+				if c.ExpectedErrMsg == "" {
+					t.Errorf("expect no error but got [%s]", err)
+				} else if err.Error() != c.ExpectedErrMsg {
+					t.Errorf("expect error [%s], got [%s]", c.ExpectedErrMsg, err)
 				}
 			} else {
-				if c.ErrMsg != "" {
-					t.Errorf("expected error: %s but got no one", c.ErrMsg)
+				if c.ExpectedErrMsg != "" {
+					t.Errorf("expect error [%s] but got no one", c.ExpectedErrMsg)
 				}
 			}
 		})
@@ -141,11 +141,11 @@ func TestAddBalance(t *testing.T) {
 
 func TestReduceBalance(t *testing.T) {
 	cases := []struct {
-		Name          string
-		UserID        string
-		Amount        int
-		TransactionID string
-		ErrMsg        string
+		Name           string
+		UserID         string
+		Amount         int
+		TransactionID  string
+		ExpectedErrMsg string
 	}{
 		{"existent user", "test_user1", 10000, "917cd5c0-0bfc-4283-bc88-b5de8ad13635", ""},
 		{"duplicated transaction_id", "test_user5", 50000, "b8eb7ccc-6bc3-4be3-b7f8-e2701bf19a6b", "duplicated transaction_id"},
@@ -157,14 +157,14 @@ func TestReduceBalance(t *testing.T) {
 		t.Run(c.Name, func(t *testing.T) {
 			err := usecase.ReduceBalance(c.UserID, c.Amount, c.TransactionID)
 			if err != nil {
-				if c.ErrMsg == "" {
-					t.Errorf("expected no error but got %s", err)
-				} else if err.Error() != c.ErrMsg {
-					t.Errorf("expected error: %s, got %s", c.ErrMsg, err)
+				if c.ExpectedErrMsg == "" {
+					t.Errorf("expect no error but got [%s]", err)
+				} else if err.Error() != c.ExpectedErrMsg {
+					t.Errorf("expect error [%s], got [%s]", c.ExpectedErrMsg, err)
 				}
 			} else {
-				if c.ErrMsg != "" {
-					t.Errorf("expected error: %s but got no one", c.ErrMsg)
+				if c.ExpectedErrMsg != "" {
+					t.Errorf("expect error [%s] but got no one", c.ExpectedErrMsg)
 				}
 			}
 		})
@@ -173,12 +173,12 @@ func TestReduceBalance(t *testing.T) {
 
 func TestAddAllUserBalance(t *testing.T) {
 	cases := []struct {
-		Name          string
-		Amount        int
-		TransactionID string
-		ErrMsg        string
+		Name           string
+		Amount         int
+		TransactionID  string
+		ExpectedErrMsg string
 	}{
-		{"existent user", 10000, "917cd5c0-0bfc-4283-bc88-b5de8ad13635", ""},
+		{"normal case", 10000, "917cd5c0-0bfc-4283-bc88-b5de8ad13635", ""},
 		{"duplicated transaction_id", 50000, "b8eb7ccc-6bc3-4be3-b7f8-e2701bf19a6b", "duplicated transaction_id"},
 	}
 
@@ -186,14 +186,14 @@ func TestAddAllUserBalance(t *testing.T) {
 		t.Run(c.Name, func(t *testing.T) {
 			err := usecase.AddAllUserBalance(c.Amount, c.TransactionID)
 			if err != nil {
-				if c.ErrMsg == "" {
-					t.Errorf("expected no error but got %s", err)
-				} else if err.Error() != c.ErrMsg {
-					t.Errorf("expected error: %s, got %s", c.ErrMsg, err)
+				if c.ExpectedErrMsg == "" {
+					t.Errorf("expect no error but got [%s]", err)
+				} else if err.Error() != c.ExpectedErrMsg {
+					t.Errorf("expect error [%s], got [%s]", c.ExpectedErrMsg, err)
 				}
 			} else {
-				if c.ErrMsg != "" {
-					t.Errorf("expected error: %s but got no one", c.ErrMsg)
+				if c.ExpectedErrMsg != "" {
+					t.Errorf("expect error [%s] but got no one", c.ExpectedErrMsg)
 				}
 			}
 		})
@@ -202,10 +202,10 @@ func TestAddAllUserBalance(t *testing.T) {
 
 func TestGetBalance(t *testing.T) {
 	cases := []struct {
-		Name    string
-		UserID  string
-		Balance int
-		Err     error
+		Name            string
+		UserID          string
+		ExpectedBalance int
+		ExpectedErr     error
 	}{
 		{"existent user1", "test_user1", 10000, nil},
 		{"existent user2", "test_user5", 50000, nil},
@@ -216,11 +216,11 @@ func TestGetBalance(t *testing.T) {
 		t.Run(c.Name, func(t *testing.T) {
 			balance, err := usecase.GetBalance(c.UserID)
 			if err == nil {
-				if balance != c.Balance {
-					t.Errorf("expected balance: %d, got %d", c.Balance, balance)
+				if balance != c.ExpectedBalance {
+					t.Errorf("expect balance [%d], got [%d]", c.ExpectedBalance, balance)
 				}
-			} else if err.Error() != c.Err.Error() {
-				t.Errorf("expected error: %s, got %s", err, c.Err)
+			} else if err.Error() != c.ExpectedErr.Error() {
+				t.Errorf("expect error [%s], got [%s]", err, c.ExpectedErr)
 			}
 		})
 	}

@@ -15,7 +15,7 @@ import (
 
 var repo domain.UserBalanceRepository
 
-// NewMockDatabase は新しいSQLiteの接続を作成
+// NewMockDatabase 新しいSQLiteの接続を作成
 // SQLiteではマルチスレッドの書き込みが制限されるため、テストケース毎に新しい接続の作成が必要
 func NewMockDatabase(file string) *DB {
 	conn, _ := sql.Open("sqlite3", fmt.Sprintf("file:%s?mode=memory&cache=shared", file))
@@ -54,7 +54,7 @@ func TestGetUserBalanceByUserID(t *testing.T) {
 		Name            string
 		UserID          string
 		ExpectedBalance int
-		ErrMsg          string
+		ExpectedErrMsg  string
 	}{
 		{"existent user1", "test_user1", 10000, ""},
 		{"existent user2", "test_user3", 30000, ""},
@@ -70,24 +70,24 @@ func TestGetUserBalanceByUserID(t *testing.T) {
 			userBalance, err := repo.GetUserBalanceByUserID(c.UserID)
 			if err != nil {
 				var pgErr *pgconn.PgError
-				if c.ErrMsg == "" {
-					t.Errorf("expected no error but got %s", err)
+				if c.ExpectedErrMsg == "" {
+					t.Errorf("expect no error but got [%s]", err)
 				} else if errors.As(err, &pgErr) {
-					if pgErr.Message != c.ErrMsg {
-						t.Errorf("expected error: %s, got %s", c.ErrMsg, err)
+					if pgErr.Message != c.ExpectedErrMsg {
+						t.Errorf("expect error [%s], got [%s]", c.ExpectedErrMsg, err)
 					}
 				} else {
-					if err.Error() != c.ErrMsg {
-						t.Errorf("expected error: %s, got %s", c.ErrMsg, err)
+					if err.Error() != c.ExpectedErrMsg {
+						t.Errorf("expect error [%s], got [%s]", c.ExpectedErrMsg, err)
 					}
 				}
 			} else {
-				if c.ErrMsg != "" {
-					t.Errorf("expected error %s but got no one", c.ErrMsg)
+				if c.ExpectedErrMsg != "" {
+					t.Errorf("expect error [%s] but got no one", c.ExpectedErrMsg)
 				} else if userBalance.UserID != c.UserID {
-					t.Errorf("expected user_id: %s, got %s", c.UserID, userBalance.UserID)
+					t.Errorf("expect user_id [%s], got [%s]", c.UserID, userBalance.UserID)
 				} else if userBalance.Balance != c.ExpectedBalance {
-					t.Errorf("expected balance: %d, got %d", c.ExpectedBalance, userBalance.Balance)
+					t.Errorf("expect balance [%d], got [%d]", c.ExpectedBalance, userBalance.Balance)
 				}
 			}
 		})
@@ -101,7 +101,7 @@ func TestAddUserBalanceByUserID(t *testing.T) {
 		Amount          int
 		TransactionID   string
 		ExpectedBalance int
-		ErrMsg          string
+		ExpectedErrMsg  string
 	}{
 		{"existent user", "test_user1", 1000, "ab20818d-9889-4e6b-b32f-c2be401ec02d", 11000, ""},
 		{"duplicated transaction_id", "test_user1", 1000, "b8eb7ccc-6bc3-4be3-b7f8-e2701bf19a6b", 10000, "UNIQUE constraint failed: transaction_history.transaction_id"},
@@ -117,20 +117,20 @@ func TestAddUserBalanceByUserID(t *testing.T) {
 			err := repo.AddUserBalanceByUserID(c.UserID, c.Amount, c.TransactionID)
 			if err != nil {
 				var pgErr *pgconn.PgError
-				if c.ErrMsg == "" {
-					t.Errorf("expected no error but got %s", err)
+				if c.ExpectedErrMsg == "" {
+					t.Errorf("expect no error but got [%s]", err)
 				} else if errors.As(err, &pgErr) {
-					if pgErr.Message != c.ErrMsg {
-						t.Errorf("expected error: %s, got %s", c.ErrMsg, err)
+					if pgErr.Message != c.ExpectedErrMsg {
+						t.Errorf("expect error [%s], got [%s]", c.ExpectedErrMsg, err)
 					}
 				} else {
-					if err.Error() != c.ErrMsg {
-						t.Errorf("expected error: %s, got %s", c.ErrMsg, err)
+					if err.Error() != c.ExpectedErrMsg {
+						t.Errorf("expect error [%s], got [%s]", c.ExpectedErrMsg, err)
 					}
 				}
 			} else {
-				if c.ErrMsg != "" {
-					t.Errorf("expected error %s but got no one", c.ErrMsg)
+				if c.ExpectedErrMsg != "" {
+					t.Errorf("expect error [%s] but got no one", c.ExpectedErrMsg)
 				}
 				// 更新後残高を検証
 				if !strings.HasPrefix(c.Name, "nonexistent") {
@@ -138,7 +138,7 @@ func TestAddUserBalanceByUserID(t *testing.T) {
 					row := db.QueryRow("SELECT balance FROM user_balance WHERE user_id = $1", c.UserID)
 					row.Scan(&balance)
 					if balance != c.ExpectedBalance {
-						t.Errorf("expected balance %d but got %d", c.ExpectedBalance, balance)
+						t.Errorf("expect balance [%d] but got [%d]", c.ExpectedBalance, balance)
 					}
 				}
 			}
@@ -153,7 +153,7 @@ func TestReduceUserBalanceByUserID(t *testing.T) {
 		Amount          int
 		TransactionID   string
 		ExpectedBalance int
-		ErrMsg          string
+		ExpectedErrMsg  string
 	}{
 		{"existent user", "test_user1", 1000, "ab20818d-9889-4e6b-b32f-c2be401ec02d", 9000, ""},
 		{"duplicated transaction_id", "test_user1", 1000, "b8eb7ccc-6bc3-4be3-b7f8-e2701bf19a6b", 10000, "UNIQUE constraint failed: transaction_history.transaction_id"},
@@ -170,20 +170,20 @@ func TestReduceUserBalanceByUserID(t *testing.T) {
 			err := repo.ReduceUserBalanceByUserID(c.UserID, c.Amount, c.TransactionID)
 			if err != nil {
 				var pgErr *pgconn.PgError
-				if c.ErrMsg == "" {
-					t.Errorf("expected no error but got %s", err)
+				if c.ExpectedErrMsg == "" {
+					t.Errorf("expect no error but got [%s]", err)
 				} else if errors.As(err, &pgErr) {
-					if pgErr.Message != c.ErrMsg {
-						t.Errorf("expected error: %s, got %s", c.ErrMsg, err)
+					if pgErr.Message != c.ExpectedErrMsg {
+						t.Errorf("expect error [%s], got [%s]", c.ExpectedErrMsg, err)
 					}
 				} else {
-					if err.Error() != c.ErrMsg {
-						t.Errorf("expected error: %s, got %s", c.ErrMsg, err)
+					if err.Error() != c.ExpectedErrMsg {
+						t.Errorf("expect error [%s], got [%s]", c.ExpectedErrMsg, err)
 					}
 				}
 			} else {
-				if c.ErrMsg != "" {
-					t.Errorf("expected error %s but got no one", c.ErrMsg)
+				if c.ExpectedErrMsg != "" {
+					t.Errorf("expect error [%s] but got no one", c.ExpectedErrMsg)
 				}
 				// 更新後残高を検証
 				if !strings.HasPrefix(c.Name, "nonexistent") {
@@ -191,7 +191,7 @@ func TestReduceUserBalanceByUserID(t *testing.T) {
 					row := db.QueryRow("SELECT balance FROM user_balance WHERE user_id = $1", c.UserID)
 					row.Scan(&balance)
 					if balance != c.ExpectedBalance {
-						t.Errorf("expected balance %d but got %d", c.ExpectedBalance, balance)
+						t.Errorf("expect balance [%d] but got [%d]", c.ExpectedBalance, balance)
 					}
 				}
 			}
@@ -205,7 +205,7 @@ func TestAddAllUserBalance(t *testing.T) {
 		Amount           int
 		TransactionID    string
 		ExpectedBalances map[string]int
-		ErrMsg           string
+		ExpectedErrMsg   string
 	}{
 		{"normal case", 1000, "ab20818d-9889-4e6b-b32f-c2be401ec02d",
 			map[string]int{"test_user1": 11000, "test_user2": 21000, "test_user3": 31000, "test_user4": 41000, "test_user5": 51000},
@@ -224,20 +224,20 @@ func TestAddAllUserBalance(t *testing.T) {
 			err := repo.AddAllUserBalance(c.Amount, c.TransactionID)
 			if err != nil {
 				var pgErr *pgconn.PgError
-				if c.ErrMsg == "" {
-					t.Errorf("expected no error but got %s", err)
+				if c.ExpectedErrMsg == "" {
+					t.Errorf("expect no error but got [%s]", err)
 				} else if errors.As(err, &pgErr) {
-					if pgErr.Message != c.ErrMsg {
-						t.Errorf("expected error: %s, got %s", c.ErrMsg, err)
+					if pgErr.Message != c.ExpectedErrMsg {
+						t.Errorf("expect error [%s], got [%s]", c.ExpectedErrMsg, err)
 					}
 				} else {
-					if err.Error() != c.ErrMsg {
-						t.Errorf("expected error: %s, got %s", c.ErrMsg, err)
+					if err.Error() != c.ExpectedErrMsg {
+						t.Errorf("expect error [%s], got [%s]", c.ExpectedErrMsg, err)
 					}
 				}
 			} else {
-				if c.ErrMsg != "" {
-					t.Errorf("expected error %s but got no one", c.ErrMsg)
+				if c.ExpectedErrMsg != "" {
+					t.Errorf("expect error [%s] but got no one", c.ExpectedErrMsg)
 				}
 				// 更新後残高を検証
 				for userID, expectedBalance := range c.ExpectedBalances {
@@ -245,7 +245,7 @@ func TestAddAllUserBalance(t *testing.T) {
 					row := db.QueryRow("SELECT balance FROM user_balance WHERE user_id = $1", userID)
 					row.Scan(&balance)
 					if balance != expectedBalance {
-						t.Errorf("expected balance %d for %s but got %d", expectedBalance, userID, balance)
+						t.Errorf("expect balance [%d] for [%s] but got [%d]", expectedBalance, userID, balance)
 					}
 				}
 			}
