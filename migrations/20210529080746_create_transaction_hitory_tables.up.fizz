@@ -1,6 +1,0 @@
-create_table("transaction_history") {
-  t.Column("transaction_id", "string", {primary: true, size: 36})
-  t.Column("user_id", "string", {null: true, size: 36})
-  t.Column("transaction_type", "integer", {size: 64})
-  t.Column("amount", "integer", {default: 0})
-}

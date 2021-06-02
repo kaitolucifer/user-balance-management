@@ -1,4 +1,0 @@
-create_table("user_balance") {
-  t.Column("user_id", "string", {primary: true, size: 36})
-  t.Column("balance", "integer", {"default": 0})
-}
