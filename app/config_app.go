@@ -21,7 +21,7 @@ var dbPort = flag.String("dbport", "5432", "database port number")
 var dbSSL = flag.String("dbssl", "disable", "use database ssl tunnel or not")
 
 var db infrastructure.DB
-var handler presentation.UserBalanceHandler
+var handler *presentation.UserBalanceHandler
 var mux http.Handler
 
 func configApp() {
@@ -32,11 +32,10 @@ func configApp() {
 	repo := injector.InjectRepository(db)
 	usecase := injector.InjectUsecase(repo)
 
-	var app presentation.App
-
+	app := new(presentation.App)
 	app.InfoLog = log.New(os.Stdout, "INFO\t", log.Ldate|log.Ltime)
 	app.ErrorLog = log.New(os.Stdout, "ERROR\t", log.Ldate|log.Ltime|log.Lshortfile)
 
-	handler = injector.InjectHandler(usecase, &app)
+	handler = injector.InjectHandler(usecase, app)
 	mux = presentation.Routes(handler)
 }
