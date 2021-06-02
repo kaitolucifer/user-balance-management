@@ -2,6 +2,7 @@ package presentation
 
 import (
 	"encoding/json"
+	"fmt"
 	"io/ioutil"
 	"log"
 	"net/http"
@@ -34,7 +35,18 @@ func NewUserBalanceHander(usecase domain.UserBalanceUsecase, app *App) *UserBala
 
 // HealthCheck ヘルスチェック用ハンドラ
 func (h *UserBalanceHandler) HealthCheck(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
 	resp := []byte(`{"status": "success", "message": "healthy"}`)
+	w.Write(resp)
+}
+
+// NotFound 404時のハンドラ
+func (h *UserBalanceHandler) NotFound(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+	respJSON := fmt.Sprintf(`{"status": "error", "message": "The requested URL %s was not found on this server."}`,
+		r.RequestURI)
+	resp := []byte(respJSON)
+	w.WriteHeader(http.StatusNotFound)
 	w.Write(resp)
 }
 

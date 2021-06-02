@@ -14,6 +14,7 @@ func Routes(handler *UserBalanceHandler) http.Handler {
 	r.Use(middleware.Recoverer)
 
 	r.Get("/", handler.HealthCheck)
+	r.NotFound(handler.NotFound)
 	r.Get("/balance/{userID}", handler.GetUserBalance)
 	r.Patch("/balance/add/{userID}", handler.ChangeUserBalance)
 	r.Patch("/balance/reduce/{userID}", handler.ChangeUserBalance)
