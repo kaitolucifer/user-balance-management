@@ -58,6 +58,7 @@ func TestGetUserBalanceByUserID(t *testing.T) {
 	}{
 		{"existent user1", "test_user1", 10000, ""},
 		{"existent user2", "test_user3", 30000, ""},
+		{"sql injection", "'; DROP TABLE user_balance;'", 0, "sql: no rows in result set"},
 		{"nonexistent user", "unknown", 0, "sql: no rows in result set"},
 	}
 
@@ -105,6 +106,7 @@ func TestAddUserBalanceByUserID(t *testing.T) {
 	}{
 		{"existent user", "test_user1", 1000, "ab20818d-9889-4e6b-b32f-c2be401ec02d", 11000, ""},
 		{"duplicated transaction_id", "test_user1", 1000, "b8eb7ccc-6bc3-4be3-b7f8-e2701bf19a6b", 10000, "UNIQUE constraint failed: transaction_history.transaction_id"},
+		{"sql injection", "'; DROP TABLE user_balance;'", 0, "ab20818d-9889-4e6b-b32f-c2be401ec02d", 0, "sql: no rows in result set"},
 		{"nonexistent user", "unknown", 0, "ab20818d-9889-4e6b-b32f-c2be401ec02d", 0, "sql: no rows in result set"},
 	}
 
@@ -158,6 +160,7 @@ func TestReduceUserBalanceByUserID(t *testing.T) {
 		{"existent user", "test_user1", 1000, "ab20818d-9889-4e6b-b32f-c2be401ec02d", 9000, ""},
 		{"duplicated transaction_id", "test_user1", 1000, "b8eb7ccc-6bc3-4be3-b7f8-e2701bf19a6b", 10000, "UNIQUE constraint failed: transaction_history.transaction_id"},
 		{"nonexistent user", "unknown", 0, "ab20818d-9889-4e6b-b32f-c2be401ec02d", 0, "update failed"},
+		{"sql injection", "'; DROP TABLE user_balance;'", 0, "ab20818d-9889-4e6b-b32f-c2be401ec02d", 0, "update failed"},
 		{"insufficient balance", "test_user5", 60000, "ab20818d-9889-4e6b-b32f-c2be401ec02d", 50000, "update failed"},
 	}
 
