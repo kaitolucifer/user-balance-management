@@ -153,6 +153,28 @@ func TestHealthCheck(t *testing.T) {
 	}
 }
 
+func TestNotFound(t *testing.T) {
+	ts := httptest.NewServer(http.HandlerFunc(handler.NotFound))
+	defer ts.Close()
+
+	res, err := http.Get(ts.URL + "/test")
+	if err != nil {
+		t.Errorf("expect no error but got [%s]", err)
+	}
+
+	resBody, err := io.ReadAll(res.Body)
+	res.Body.Close()
+	if err != nil {
+		t.Errorf("expect no error but got [%s]", err)
+	}
+
+	expectedResBody := `{"status": "error", "message": "The requested URL /test was not found on this server."}`
+	strResBody := string(resBody)
+	if strResBody != expectedResBody {
+		t.Errorf("expect response body [%s]\nbut got [%s]", expectedResBody, strResBody)
+	}
+}
+
 func TestGetUserBalance(t *testing.T) {
 	cases := []struct {
 		Name            string
