@@ -12,6 +12,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"os"
+	"strings"
 	"testing"
 	"time"
 
@@ -228,8 +229,10 @@ func TestGetUserBalance(t *testing.T) {
 					t.Errorf("expect message [%s] but got [%s]", c.ExpectedMsg, resp.Message)
 				}
 			}
-			if resp.Balance != c.ExpectedBalance {
-				t.Errorf("expect balance [%d] but got [%d]", c.ExpectedBalance, resp.Balance)
+			if strings.HasPrefix(c.Name, "existent") {
+				if *resp.Balance != c.ExpectedBalance {
+					t.Errorf("expect balance [%d] but got [%d]", c.ExpectedBalance, resp.Balance)
+				}
 			}
 		})
 	}
@@ -252,9 +255,10 @@ func TestAddUserBalance(t *testing.T) {
 		{"nonexistent user1", "unknown", 1000, "917cd5c0-0bfc-4283-bc88-b5de8ad13635", "fail", "user_id not found", http.StatusNotFound},
 		{"nonexistent user2", "someone", 1000, "917cd5c0-0bfc-4283-bc88-b5de8ad13635", "fail", "user_id not found", http.StatusNotFound},
 		{"duplicated transaction_id", "test_user5", 1000, "b8eb7ccc-6bc3-4be3-b7f8-e2701bf19a6b", "fail", "transaction_id must be unique", http.StatusUnprocessableEntity},
-		{"invalid amount1", "test_user3", -100, "917cd5c0-0bfc-4283-bc88-b5de8ad13635", "fail", "amount can't be negative", http.StatusUnprocessableEntity},
-		{"invalid amount2", "test_user5", 0, "917cd5c0-0bfc-4283-bc88-b5de8ad13635", "fail", "amount can't be null or 0", http.StatusBadRequest},
+		{"invalid amount1", "test_user3", -100, "917cd5c0-0bfc-4283-bc88-b5de8ad13635", "fail", "amount must be positive", http.StatusUnprocessableEntity},
+		{"invalid amount2", "test_user5", 0, "917cd5c0-0bfc-4283-bc88-b5de8ad13635", "fail", "amount must be positive", http.StatusUnprocessableEntity},
 		{"empty user id", "", 0, "917cd5c0-0bfc-4283-bc88-b5de8ad13635", "fail", "user_id is empty", http.StatusBadRequest},
+		{"empty transaction_id", "test_user1", 0, "", "fail", "transaction_id can't be null", http.StatusBadRequest},
 	}
 
 	for _, c := range cases {
@@ -265,7 +269,7 @@ func TestAddUserBalance(t *testing.T) {
 			chiCtx.URLParams.Add("userID", c.UserID)
 			r = r.WithContext(context.WithValue(r.Context(), chi.RouteCtxKey, chiCtx))
 			reqModel := ChangeUserBalanceRequest{
-				Amount:        c.Amount,
+				Amount:        &c.Amount,
 				TransactionID: c.TransactionID,
 			}
 			reqBody, _ := json.Marshal(&reqModel)
@@ -320,9 +324,10 @@ func TestReduceUserBalance(t *testing.T) {
 		{"nonexistent user1", "unknown", 1000, "917cd5c0-0bfc-4283-bc88-b5de8ad13635", "fail", "user_id not found", http.StatusNotFound},
 		{"nonexistent user2", "someone", 1000, "917cd5c0-0bfc-4283-bc88-b5de8ad13635", "fail", "user_id not found", http.StatusNotFound},
 		{"duplicated transaction_id", "test_user5", 1000, "b8eb7ccc-6bc3-4be3-b7f8-e2701bf19a6b", "fail", "transaction_id must be unique", http.StatusUnprocessableEntity},
-		{"invalid amount1", "test_user3", -100, "917cd5c0-0bfc-4283-bc88-b5de8ad13635", "fail", "amount can't be negative", http.StatusUnprocessableEntity},
-		{"invalid amount2", "test_user5", 0, "917cd5c0-0bfc-4283-bc88-b5de8ad13635", "fail", "amount can't be null or 0", http.StatusBadRequest},
+		{"invalid amount1", "test_user3", -100, "917cd5c0-0bfc-4283-bc88-b5de8ad13635", "fail", "amount must be positive", http.StatusUnprocessableEntity},
+		{"invalid amount2", "test_user5", 0, "917cd5c0-0bfc-4283-bc88-b5de8ad13635", "fail", "amount must be positive", http.StatusUnprocessableEntity},
 		{"empty user id", "", 0, "917cd5c0-0bfc-4283-bc88-b5de8ad13635", "fail", "user_id is empty", http.StatusBadRequest},
+		{"empty transaction_id", "test_user1", 0, "", "fail", "transaction_id can't be null", http.StatusBadRequest},
 	}
 
 	for _, c := range cases {
@@ -333,7 +338,7 @@ func TestReduceUserBalance(t *testing.T) {
 			chiCtx.URLParams.Add("userID", c.UserID)
 			r = r.WithContext(context.WithValue(r.Context(), chi.RouteCtxKey, chiCtx))
 			reqModel := ChangeUserBalanceRequest{
-				Amount:        c.Amount,
+				Amount:        &c.Amount,
 				TransactionID: c.TransactionID,
 			}
 			reqBody, _ := json.Marshal(&reqModel)
@@ -384,8 +389,9 @@ func TestAddAllUserBalance(t *testing.T) {
 		{"normal case2", 10000, "917cd5c0-0bfc-4283-bc88-b5de8ad13635", "success", "user balance has been added successfully", http.StatusOK},
 		{"normal case3", 100000, "917cd5c0-0bfc-4283-bc88-b5de8ad13635", "success", "user balance has been added successfully", http.StatusOK},
 		{"duplicated transaction_id", 1000, "b8eb7ccc-6bc3-4be3-b7f8-e2701bf19a6b", "fail", "transaction_id must be unique", http.StatusUnprocessableEntity},
-		{"invalid amount1", -100, "917cd5c0-0bfc-4283-bc88-b5de8ad13635", "fail", "amount can't be negative", http.StatusUnprocessableEntity},
-		{"invalid amount2", 0, "917cd5c0-0bfc-4283-bc88-b5de8ad13635", "fail", "amount can't be null or 0", http.StatusBadRequest},
+		{"invalid amount1", -100, "917cd5c0-0bfc-4283-bc88-b5de8ad13635", "fail", "amount must be positive", http.StatusUnprocessableEntity},
+		{"invalid amount2", 0, "917cd5c0-0bfc-4283-bc88-b5de8ad13635", "fail", "amount must be positive", http.StatusUnprocessableEntity},
+		{"empty transaction_id", 0, "", "fail", "transaction_id can't be null", http.StatusBadRequest},
 	}
 
 	for _, c := range cases {
@@ -393,7 +399,7 @@ func TestAddAllUserBalance(t *testing.T) {
 			r := httptest.NewRequest("PATCH", "/balance/add-all", nil)
 			w := httptest.NewRecorder()
 			reqModel := ChangeUserBalanceRequest{
-				Amount:        c.Amount,
+				Amount:        &c.Amount,
 				TransactionID: c.TransactionID,
 			}
 			reqBody, _ := json.Marshal(&reqModel)

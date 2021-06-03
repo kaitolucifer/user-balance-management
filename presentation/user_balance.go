@@ -54,7 +54,7 @@ func (h *UserBalanceHandler) NotFound(w http.ResponseWriter, r *http.Request) {
 type getUserBalanceResponse struct {
 	Status  string `json:"status"`
 	Message string `json:"message,omitempty"`
-	Balance int    `json:"balance,omitempty"`
+	Balance *int    `json:"balance,omitempty"`
 }
 
 func (h *UserBalanceHandler) GetUserBalance(w http.ResponseWriter, r *http.Request) {
@@ -87,7 +87,7 @@ func (h *UserBalanceHandler) GetUserBalance(w http.ResponseWriter, r *http.Reque
 	}
 
 	resp.Status = "success"
-	resp.Balance = balance
+	resp.Balance = &balance
 	out, _ := json.Marshal(resp)
 	w.WriteHeader(http.StatusOK)
 	w.Write(out)
@@ -101,7 +101,7 @@ type changeUserBalanceResponse struct {
 
 // changeUserBalanceResponse 残高を加減算するエンドポイントのリクエストフォーマット
 type ChangeUserBalanceRequest struct {
-	Amount        int    `json:"amount" validate:"required"`
+	Amount        *int    `json:"amount" validate:"required"`
 	TransactionID string `json:"transaction_id" validate:"required"`
 }
 
@@ -151,16 +151,16 @@ func (h *UserBalanceHandler) ChangeUserBalance(w http.ResponseWriter, r *http.Re
 		for _, validErr := range err.(validator.ValidationErrors) {
 			invalidFields = append(invalidFields, validErr.Field())
 		}
-		resp.Message = strings.Join(invalidFields, ", ") + " can't be null or 0"
+		resp.Message = strings.Join(invalidFields, ", ") + " can't be null"
 		out, _ := json.Marshal(resp)
 		w.WriteHeader(http.StatusBadRequest)
 		w.Write(out)
 		return
 	}
 
-	if req.Amount < 0 {
+	if *req.Amount <= 0 {
 		resp.Status = "fail"
-		resp.Message = "amount can't be negative"
+		resp.Message = "amount must be positive"
 		out, _ := json.Marshal(resp)
 		w.WriteHeader(http.StatusUnprocessableEntity)
 		w.Write(out)
@@ -168,9 +168,9 @@ func (h *UserBalanceHandler) ChangeUserBalance(w http.ResponseWriter, r *http.Re
 	}
 
 	if change_type == "add" {
-		err = h.usecase.AddBalance(userID, req.Amount, req.TransactionID)
+		err = h.usecase.AddBalance(userID, *req.Amount, req.TransactionID)
 	} else {
-		err = h.usecase.ReduceBalance(userID, req.Amount, req.TransactionID)
+		err = h.usecase.ReduceBalance(userID, *req.Amount, req.TransactionID)
 	}
 
 	if err != nil {
@@ -226,23 +226,23 @@ func (h *UserBalanceHandler) AddAllUserBalance(w http.ResponseWriter, r *http.Re
 		for _, validErr := range err.(validator.ValidationErrors) {
 			invalidFields = append(invalidFields, validErr.Field())
 		}
-		resp.Message = strings.Join(invalidFields, ", ") + " can't be null or 0"
+		resp.Message = strings.Join(invalidFields, ", ") + " can't be null"
 		out, _ := json.Marshal(resp)
 		w.WriteHeader(http.StatusBadRequest)
 		w.Write(out)
 		return
 	}
 
-	if req.Amount < 0 {
+	if *req.Amount <= 0 {
 		resp.Status = "fail"
-		resp.Message = "amount can't be negative"
+		resp.Message = "amount must be positive"
 		out, _ := json.Marshal(resp)
 		w.WriteHeader(http.StatusUnprocessableEntity)
 		w.Write(out)
 		return
 	}
 
-	err = h.usecase.AddAllUserBalance(req.Amount, req.TransactionID)
+	err = h.usecase.AddAllUserBalance(*req.Amount, req.TransactionID)
 	if err != nil {
 		status, msg, httpCode := handleError(err)
 		if status == "error" {
