@@ -1,0 +1,32 @@
+version: "3"
+services:
+  app:
+    build:
+      context: ./
+      dockerfile: Dockerfile
+    container_name: go-user-balance-management
+    ports:
+      - "8080:8080"
+    depends_on:
+      - db
+      - migrate
+    restart: always
+  db:
+    image: postgres
+    container_name: go-user-balance-management-db
+    environment:
+      POSTGRES_PASSWORD: password
+      POSTGRES_USER: admin
+      POSTGRES_DB: user_balance
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+  migrate:
+    image: migrate/migrate
+    volumes:
+      - ./migrations:/migrations
+    depends_on:
+      - db
+    command: -source=file://migrations -database postgres://admin:password@db:5432/user_balance?sslmode=disable up
+
+volumes:
+  pgdata:
