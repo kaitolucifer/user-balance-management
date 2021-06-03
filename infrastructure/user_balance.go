@@ -56,8 +56,8 @@ func (repo *userBalanceRepository) AddUserBalanceByUserID(userID string, amount 
 		}
 	}()
 
-	update_query := `UPDATE user_balance SET balance = balance + $1, updated_at = $2 WHERE user_id = $3`
-	res, err := tx.ExecContext(ctx, update_query, amount, time.Now(), userID)
+	updateQuery := `UPDATE user_balance SET balance = balance + $1, updated_at = $2 WHERE user_id = $3`
+	res, err := tx.ExecContext(ctx, updateQuery, amount, time.Now(), userID)
 	if err != nil {
 		tx.Rollback()
 		return err
@@ -72,9 +72,9 @@ func (repo *userBalanceRepository) AddUserBalanceByUserID(userID string, amount 
 		return sql.ErrNoRows
 	}
 
-	insert_query := `INSERT INTO transaction_history (transaction_id, user_id, transaction_type, amount, created_at, updated_at)
+	insertQuery := `INSERT INTO transaction_history (transaction_id, user_id, transaction_type, amount, created_at, updated_at)
 					 VALUES ($1, $2, $3, $4, $5, $6)`
-	_, err = tx.ExecContext(ctx, insert_query,
+	_, err = tx.ExecContext(ctx, insertQuery,
 		transactionID,
 		userID,
 		domain.TypeAddUserBalance,
@@ -108,8 +108,8 @@ func (repo *userBalanceRepository) ReduceUserBalanceByUserID(userID string, amou
 		}
 	}()
 
-	update_query := `UPDATE user_balance SET balance = balance - $1, updated_at = $2 WHERE user_id = $3 AND balance - $1 >= 0`
-	res, err := tx.ExecContext(ctx, update_query, amount, time.Now(), userID)
+	updateQuery := `UPDATE user_balance SET balance = balance - $1, updated_at = $2 WHERE user_id = $3 AND balance - $1 >= 0`
+	res, err := tx.ExecContext(ctx, updateQuery, amount, time.Now(), userID)
 	if err != nil {
 		tx.Rollback()
 		return err
@@ -124,9 +124,9 @@ func (repo *userBalanceRepository) ReduceUserBalanceByUserID(userID string, amou
 		return errors.New("update failed")
 	}
 
-	insert_query := `INSERT INTO transaction_history (transaction_id, user_id, transaction_type, amount, created_at, updated_at)
+	insertQuery := `INSERT INTO transaction_history (transaction_id, user_id, transaction_type, amount, created_at, updated_at)
 					 VALUES ($1, $2, $3, $4, $5, $6)`
-	_, err = tx.ExecContext(ctx, insert_query,
+	_, err = tx.ExecContext(ctx, insertQuery,
 		transactionID,
 		userID,
 		domain.TypeReduceUserBalance,
@@ -160,16 +160,16 @@ func (repo *userBalanceRepository) AddAllUserBalance(amount int, transactionID s
 		}
 	}()
 
-	update_query := `UPDATE user_balance SET balance = balance + $1, updated_at = $2`
-	_, err = tx.ExecContext(ctx, update_query, amount, time.Now())
+	updateQuery := `UPDATE user_balance SET balance = balance + $1, updated_at = $2`
+	_, err = tx.ExecContext(ctx, updateQuery, amount, time.Now())
 	if err != nil {
 		tx.Rollback()
 		return err
 	}
 
-	insert_query := `INSERT INTO transaction_history (transaction_id, transaction_type, amount, created_at, updated_at)
+	insertQuery := `INSERT INTO transaction_history (transaction_id, transaction_type, amount, created_at, updated_at)
 					 VALUES ($1, $2, $3, $4, $5)`
-	_, err = tx.ExecContext(ctx, insert_query,
+	_, err = tx.ExecContext(ctx, insertQuery,
 		transactionID,
 		domain.TypeAddAllUserBalance,
 		amount,
