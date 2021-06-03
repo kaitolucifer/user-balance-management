@@ -4,6 +4,7 @@ import (
 	"time"
 )
 
+// UserBalanceModel user_balanceテーブルのデータモデル
 type UserBalanceModel struct {
 	UserID    string
 	Balance   int
@@ -11,6 +12,7 @@ type UserBalanceModel struct {
 	UpdatedAt time.Time
 }
 
+// TransactionHistoryModel transaction_historyテーブルのデータモデル
 type TransactionHistoryModel struct {
 	TransactionID   string
 	UserID          string
@@ -20,6 +22,7 @@ type TransactionHistoryModel struct {
 	UpdatedAt       time.Time
 }
 
+// TransactionType 取引種類
 type TransactionType int
 
 const (
@@ -28,6 +31,7 @@ const (
 	TypeAddAllUserBalance
 )
 
+// UserBalanceRepository ユーザー残高管理repositoryのインタフェース
 type UserBalanceRepository interface {
 	GetUserBalanceByUserID(string) (UserBalanceModel, error)
 	AddUserBalanceByUserID(string, int, string) error
@@ -35,6 +39,7 @@ type UserBalanceRepository interface {
 	AddAllUserBalance(int, string) error
 }
 
+// UserBalanceUsecase ユーザー残高管理usecaseのインタフェース
 type UserBalanceUsecase interface {
 	AddBalance(string, int, string) error
 	ReduceBalance(string, int, string) error

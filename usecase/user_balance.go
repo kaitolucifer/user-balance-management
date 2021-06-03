@@ -6,20 +6,24 @@ import (
 	"github.com/kaitolucifer/user-balance-management/domain"
 )
 
+// userBalanceUsecase repositoryを格納
 type userBalanceUsecase struct {
 	repo domain.UserBalanceRepository
 }
 
+// NewUserBalanceUsecase 新しいusecaseを作成
 func NewUserBalanceUsecase(repo domain.UserBalanceRepository) domain.UserBalanceUsecase {
 	return &userBalanceUsecase{
 		repo: repo,
 	}
 }
 
+// AddBalance ユーザーIDでユーザー残高を加算
 func (u *userBalanceUsecase) AddBalance(userID string, amount int, transactionID string) error {
 	return u.repo.AddUserBalanceByUserID(userID, amount, transactionID)
 }
 
+// ReduceBalance ユーザーIDでユーザー残高を減算
 func (u *userBalanceUsecase) ReduceBalance(userID string, amount int, transactionID string) error {
 	userBalance, err := u.repo.GetUserBalanceByUserID(userID)
 	if err != nil {
@@ -38,6 +42,7 @@ func (u *userBalanceUsecase) ReduceBalance(userID string, amount int, transactio
 	return nil
 }
 
+// ユーザー残高を一斉に加算
 func (u *userBalanceUsecase) AddAllUserBalance(amount int, transactionID string) error {
 	return u.repo.AddAllUserBalance(amount, transactionID)
 }

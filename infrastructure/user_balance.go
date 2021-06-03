@@ -9,14 +9,17 @@ import (
 	"github.com/kaitolucifer/user-balance-management/domain"
 )
 
+// userBalanceRepository DB接続を格納
 type userBalanceRepository struct {
 	Conn DB
 }
 
+// NewUserBalanceRepository 新しいrepositoryを作成
 func NewUserBalanceRepository(db DB) domain.UserBalanceRepository {
 	return &userBalanceRepository{db}
 }
 
+// GetUserBalanceByUserID ユーザーIDでユーザー残高を取得
 func (repo *userBalanceRepository) GetUserBalanceByUserID(userID string) (domain.UserBalanceModel, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
@@ -37,6 +40,7 @@ func (repo *userBalanceRepository) GetUserBalanceByUserID(userID string) (domain
 	return userBalance, nil
 }
 
+// AddUserBalanceByUserID ユーザーIDでユーザー残高を加算
 func (repo *userBalanceRepository) AddUserBalanceByUserID(userID string, amount int, transactionID string) error {
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
@@ -88,6 +92,7 @@ func (repo *userBalanceRepository) AddUserBalanceByUserID(userID string, amount 
 	return err
 }
 
+// ReduceUserBalanceByUserID ユーザーIDでユーザー残高を減算
 func (repo *userBalanceRepository) ReduceUserBalanceByUserID(userID string, amount int, transactionID string) error {
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
@@ -139,6 +144,7 @@ func (repo *userBalanceRepository) ReduceUserBalanceByUserID(userID string, amou
 	return err
 }
 
+// AddAllUserBalance ユーザー残高を一斉に加算
 func (repo *userBalanceRepository) AddAllUserBalance(amount int, transactionID string) error {
 	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 	defer cancel()
