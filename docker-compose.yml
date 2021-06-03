@@ -27,6 +27,7 @@ services:
     depends_on:
       - db
     command: -source=file://migrations -database postgres://admin:password@db:5432/user_balance?sslmode=disable up
+    restart: on-failure
 
 volumes:
   pgdata:
