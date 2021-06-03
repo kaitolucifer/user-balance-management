@@ -25,7 +25,7 @@ func InjectUsecase(repo domain.UserBalanceRepository) domain.UserBalanceUsecase 
 	return usecase
 }
 
-// InjectHandler handlerまたはcontrollerを注入
+// InjectHandler handlerを注入
 func InjectHandler(usecase domain.UserBalanceUsecase, app *presentation.App) *presentation.UserBalanceHandler {
 	handler := presentation.NewUserBalanceHander(usecase, app)
 	return handler

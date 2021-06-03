@@ -19,7 +19,7 @@ func NewUserBalanceRepository(db DB) domain.UserBalanceRepository {
 	return &userBalanceRepository{db}
 }
 
-// GetUserBalanceByUserID ユーザーIDでユーザー残高を取得
+// GetUserBalanceByUserID ユーザーIDでユーザー残高情報を取得
 func (repo *userBalanceRepository) GetUserBalanceByUserID(userID string) (domain.UserBalanceModel, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
