@@ -108,7 +108,7 @@ func (repo *userBalanceRepository) ReduceUserBalanceByUserID(userID string, amou
 		}
 	}()
 
-	update_query := `UPDATE user_balance SET balance = balance - $1, updated_at = $2 WHERE user_id = $3 AND balance - $1 > 0`
+	update_query := `UPDATE user_balance SET balance = balance - $1, updated_at = $2 WHERE user_id = $3 AND balance - $1 >= 0`
 	res, err := tx.ExecContext(ctx, update_query, amount, time.Now(), userID)
 	if err != nil {
 		tx.Rollback()
