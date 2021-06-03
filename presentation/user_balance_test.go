@@ -246,9 +246,9 @@ func TestAddUserBalance(t *testing.T) {
 		ExpectedMsg    string
 		ExpectedCode   int
 	}{
-		{"existent user1", "test_user1", 1000, "917cd5c0-0bfc-4283-bc88-b5de8ad13635", "success", "user balance added successfully", http.StatusOK},
-		{"existent user2", "test_user2", 10000, "917cd5c0-0bfc-4283-bc88-b5de8ad13635", "success", "user balance added successfully", http.StatusOK},
-		{"existent user3", "test_user3", 100000, "917cd5c0-0bfc-4283-bc88-b5de8ad13635", "success", "user balance added successfully", http.StatusOK},
+		{"existent user1", "test_user1", 1000, "917cd5c0-0bfc-4283-bc88-b5de8ad13635", "success", "user balance has been added successfully", http.StatusOK},
+		{"existent user2", "test_user2", 10000, "917cd5c0-0bfc-4283-bc88-b5de8ad13635", "success", "user balance has been added successfully", http.StatusOK},
+		{"existent user3", "test_user3", 100000, "917cd5c0-0bfc-4283-bc88-b5de8ad13635", "success", "user balance has been added successfully", http.StatusOK},
 		{"nonexistent user1", "unknown", 1000, "917cd5c0-0bfc-4283-bc88-b5de8ad13635", "fail", "user_id not found", http.StatusNotFound},
 		{"nonexistent user2", "someone", 1000, "917cd5c0-0bfc-4283-bc88-b5de8ad13635", "fail", "user_id not found", http.StatusNotFound},
 		{"duplicated transaction_id", "test_user5", 1000, "b8eb7ccc-6bc3-4be3-b7f8-e2701bf19a6b", "fail", "transaction_id must be unique", http.StatusUnprocessableEntity},
@@ -313,8 +313,8 @@ func TestReduceUserBalance(t *testing.T) {
 		ExpectedMsg    string
 		ExpectedCode   int
 	}{
-		{"existent user1", "test_user1", 1000, "917cd5c0-0bfc-4283-bc88-b5de8ad13635", "success", "user balance added successfully", http.StatusOK},
-		{"existent user2", "test_user2", 10000, "917cd5c0-0bfc-4283-bc88-b5de8ad13635", "success", "user balance added successfully", http.StatusOK},
+		{"existent user1", "test_user1", 1000, "917cd5c0-0bfc-4283-bc88-b5de8ad13635", "success", "user balance has been added successfully", http.StatusOK},
+		{"existent user2", "test_user2", 10000, "917cd5c0-0bfc-4283-bc88-b5de8ad13635", "success", "user balance has been added successfully", http.StatusOK},
 		{"insuffcient balance1", "test_user4", 50000, "917cd5c0-0bfc-4283-bc88-b5de8ad13635", "fail", "user balance is insufficient", http.StatusUnprocessableEntity},
 		{"insuffcient balance2", "test_user5", 60000, "917cd5c0-0bfc-4283-bc88-b5de8ad13635", "fail", "user balance is insufficient", http.StatusUnprocessableEntity},
 		{"nonexistent user1", "unknown", 1000, "917cd5c0-0bfc-4283-bc88-b5de8ad13635", "fail", "user_id not found", http.StatusNotFound},
@@ -380,9 +380,9 @@ func TestAddAllUserBalance(t *testing.T) {
 		ExpectedMsg    string
 		ExpectedCode   int
 	}{
-		{"normal case1", 1000, "917cd5c0-0bfc-4283-bc88-b5de8ad13635", "success", "user balance added successfully", http.StatusOK},
-		{"normal case2", 10000, "917cd5c0-0bfc-4283-bc88-b5de8ad13635", "success", "user balance added successfully", http.StatusOK},
-		{"normal case3", 100000, "917cd5c0-0bfc-4283-bc88-b5de8ad13635", "success", "user balance added successfully", http.StatusOK},
+		{"normal case1", 1000, "917cd5c0-0bfc-4283-bc88-b5de8ad13635", "success", "user balance has been added successfully", http.StatusOK},
+		{"normal case2", 10000, "917cd5c0-0bfc-4283-bc88-b5de8ad13635", "success", "user balance has been added successfully", http.StatusOK},
+		{"normal case3", 100000, "917cd5c0-0bfc-4283-bc88-b5de8ad13635", "success", "user balance has been added successfully", http.StatusOK},
 		{"duplicated transaction_id", 1000, "b8eb7ccc-6bc3-4be3-b7f8-e2701bf19a6b", "fail", "transaction_id must be unique", http.StatusUnprocessableEntity},
 		{"invalid amount1", -100, "917cd5c0-0bfc-4283-bc88-b5de8ad13635", "fail", "amount can't be negative", http.StatusUnprocessableEntity},
 		{"invalid amount2", 0, "917cd5c0-0bfc-4283-bc88-b5de8ad13635", "fail", "amount can't be null or 0", http.StatusBadRequest},

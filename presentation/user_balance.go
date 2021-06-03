@@ -188,7 +188,7 @@ func (h *UserBalanceHandler) ChangeUserBalance(w http.ResponseWriter, r *http.Re
 	}
 
 	resp.Status = "success"
-	resp.Message = "user balance added successfully"
+	resp.Message = "user balance has been added successfully"
 	out, _ := json.Marshal(resp)
 	w.WriteHeader(http.StatusOK)
 	w.Write(out)
@@ -258,7 +258,7 @@ func (h *UserBalanceHandler) AddAllUserBalance(w http.ResponseWriter, r *http.Re
 	}
 
 	resp.Status = "success"
-	resp.Message = "user balance added successfully"
+	resp.Message = "user balance has been added successfully"
 	out, _ := json.Marshal(resp)
 	w.WriteHeader(http.StatusOK)
 	w.Write(out)
