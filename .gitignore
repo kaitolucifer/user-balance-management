@@ -1,3 +1,4 @@
 .vscode
 webapp
 coverage.out
+vendor/
