@@ -13,7 +13,7 @@ import (
 	RestfulHandler "github.com/kaitolucifer/user-balance-management/presentation/restful"
 )
 
-var useGrpc = flag.Bool("use_grpc", true, "true to use Grpc API and false to use normal RESTful API")
+var useGrpc = flag.Bool("use_grpc", true, "true to use gRPC API and false to use normal RESTful API")
 
 // DB設定
 var dbHost = flag.String("dbhost", "localhost", "database host")
