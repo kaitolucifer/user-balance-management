@@ -28,7 +28,7 @@ curl localhost:8080 # RESTfulハンドラ使用時のヘルスチェック
 
 * RESTfulハンドラとgRPCハンドラの切り替え方法は？
 
-  `Dockerfile`の`CMD ["./webapp", "-dbhost", "db"]`を`CMD ["./webapp", "-dbhost", "db", "-use_grpc=false"]`に、`docker-compose.yml`で解放ポートを8080に変更すれば切り替えられる。
+  デフォルトはgRPアンドラを使用する。`Dockerfile`の`CMD ["./webapp", "-dbhost", "db"]`を`CMD ["./webapp", "-dbhost", "db", "-use_grpc=false"]`に、`docker-compose.yml`で解放ポートを8080に変更すればRESTfulハンドラに切り替えられる。
 
   
 
@@ -41,6 +41,12 @@ curl localhost:8080 # RESTfulハンドラ使用時のヘルスチェック
 * 残高加減算のデータ整合性はどのように実現されている？
 
   残高加減算処理と取引履歴の挿入はDBトランザクションを使用してデータ整合性を実現している。
+
+
+
+* ダーティリード、ファジーリード、ファントムリードについてはどう対処している？
+
+  PostgreSQLのデフォルトのトランザクション分離レベルは`READ COMMITTED`のため、ダーティリードは発生しない。ファジーリードとファントムリードは理論上発生しうるが、提供している機能では発生することが考えにくい。
 
 
 
