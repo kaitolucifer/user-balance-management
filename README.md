@@ -61,22 +61,21 @@ import (
 )
 
 func main() {	
-	conn, err := grpc.Dial("localhost:50051", grpc.WithInsecure())
-	if err != nil {
-		log.Fatalf("could not connect: %v", err)
-	}
+  conn, err := grpc.Dial("localhost:50051", grpc.WithInsecure())
+  if err != nil {
+    log.Fatalf("could not connect: %v", err)
+  }
   defer conn.Close()
   
   client := proto.NewUserBalanceClient(conn)
-	req := &proto.GetUserBalanceRequest{
-		UserId: "test_user1",
-	}
-	res, err := client.GetBalanceByUserID(context.Background(), req)
-	if err != nil {
-		log.Fatalf("error while calling gRPC: %s", err)
-	}
+  req := &proto.GetUserBalanceRequest{
+    UserId: "test_user1",
+  }
+  res, err := client.GetBalanceByUserID(context.Background(), req)
+  if err != nil {
+    log.Fatalf("error while calling gRPC: %s", err)
+  }
   fmt.Println(res.GetBalance())
-  
 }
 ```
 
