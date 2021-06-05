@@ -7,7 +7,7 @@
   * domain → Domain層: `Domainモデル、Repositoryインタフェース、Usecaseインタフェース`
   * usecase → Use Case層: `Usecaseインタフェースの実装`
   * infrastructure → Infrastructure層: `DBドライバー、Repositoryインタフェースの実装`
-  * presentation → Presentation層: `httpハンドラの実装`
+  * presentation → Presentation層: `http RESTfulハンドラとgRPCハンドラの実装`
   * injector: `各層の依存性注入用関数の実装`
   * app: `アプリケーションの設定と起動関連`
   * migrations: `スキーマ定義と初期データ投入用のDBマイグレーションスクリプト`
@@ -19,12 +19,18 @@
 
 ```bash
 docker-compose up -d
-curl localhost:8080 # ヘルスチェック
+curl localhost:8080 # RESTfulハンドラ使用時のヘルスチェック
 ```
 
 
 
 ### FAQ
+
+* RESTfulハンドラとgRPCハンドラの切り替え方法は？
+
+  `Dockerfile`の`CMD ["./webapp", "-dbhost", "db"]`を`CMD ["./webapp", "-dbhost", "db", "-use_grpc=false"]`に、`docker-compose.yml`で解放ポートを8080に変更すれば切り替えられる。
+
+  
 
 * エラーや障害によってリクエストが再送される場合の対処法は？
 
@@ -38,7 +44,45 @@ curl localhost:8080 # ヘルスチェック
 
 
 
-### APIドキュメンテーション
+### gRPC APIの使用方法
+
+インタフェースの定義は`presentation/grpc/proto/user_balance.proto`から確認できる。`protoc`で各言語のコードが生成できる。`Go`の生成コードの使用方法は以下になる。
+
+```go
+package main
+
+import (
+	"context"
+	"fmt"
+	"log"
+
+	"github.com/kaitolucifer/grpc-client/proto" // 生成コード
+	"google.golang.org/grpc"
+)
+
+func main() {	
+	conn, err := grpc.Dial("localhost:50051", grpc.WithInsecure())
+	if err != nil {
+		log.Fatalf("could not connect: %v", err)
+	}
+  defer conn.Close()
+  
+  client := proto.NewUserBalanceClient(conn)
+	req := &proto.GetUserBalanceRequest{
+		UserId: "test_user1",
+	}
+	res, err := client.GetBalanceByUserID(context.Background(), req)
+	if err != nil {
+		log.Fatalf("error while calling gRPC: %s", err)
+	}
+  fmt.Println(res.GetBalance())
+  
+}
+```
+
+
+
+### RESTful APIドキュメンテーション
 
 * **ヘルスチェック**
 
