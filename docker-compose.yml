@@ -6,7 +6,7 @@ services:
       dockerfile: Dockerfile
     container_name: go-user-balance-management
     ports:
-      - "8080:8080"
+      - "50051:50051"
     depends_on:
       - db
       - migrate
