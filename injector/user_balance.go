@@ -3,7 +3,8 @@ package injector
 import (
 	"github.com/kaitolucifer/user-balance-management/domain"
 	"github.com/kaitolucifer/user-balance-management/infrastructure"
-	"github.com/kaitolucifer/user-balance-management/presentation"
+	RestfulHandler "github.com/kaitolucifer/user-balance-management/presentation/restful"
+	GrpcHandler "github.com/kaitolucifer/user-balance-management/presentation/grpc"
 	"github.com/kaitolucifer/user-balance-management/usecase"
 )
 
@@ -25,8 +26,14 @@ func InjectUsecase(repo domain.UserBalanceRepository) domain.UserBalanceUsecase 
 	return usecase
 }
 
-// InjectHandler handlerを注入
-func InjectHandler(usecase domain.UserBalanceUsecase, app *presentation.App) *presentation.UserBalanceHandler {
-	handler := presentation.NewUserBalanceHander(usecase, app)
+// InjectRestfulHandler RESTful handlerを注入
+func InjectRestfulHandler(usecase domain.UserBalanceUsecase, app *RestfulHandler.App) *RestfulHandler.RestfulUserBalanceHandler {
+	handler := RestfulHandler.NewRestfulUserBalanceHander(usecase, app)
+	return handler
+}
+
+// InjectGrpcHandler grpc handlerを注入
+func InjectGrpcHandler(usecase domain.UserBalanceUsecase, app *GrpcHandler.App) *GrpcHandler.GrpcUserBalanceHander {
+	handler := GrpcHandler.NewGrpcUserBalanceHander(usecase, app)
 	return handler
 }
