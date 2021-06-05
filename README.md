@@ -52,12 +52,12 @@ curl localhost:8080 # RESTfulハンドラ使用時のヘルスチェック
 package main
 
 import (
-	"context"
-	"fmt"
-	"log"
+  "context"
+  "fmt"
+  "log"
 
-	"github.com/kaitolucifer/grpc-client/proto" // 生成コード
-	"google.golang.org/grpc"
+  "github.com/kaitolucifer/grpc-client/proto" // 生成コード
+  "google.golang.org/grpc"
 )
 
 func main() {	
