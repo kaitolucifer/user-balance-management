@@ -183,8 +183,8 @@ func main() {
 
     ```json
     {
-    	"amount": 1000,
-    	"transaction_id": "unique transaction_id"
+      "amount": 1000,
+      "transaction_id": "unique transaction_id"
     }
     ```
   
@@ -235,8 +235,8 @@ func main() {
 
     ```json
     {
-    	"amount": 1000,
-    	"transaction_id": "unique transaction_id"
+      "amount": 1000,
+      "transaction_id": "unique transaction_id"
     }
     ```
   
@@ -287,8 +287,8 @@ func main() {
 
     ```json
     {
-    	"amount": 1000,
-    	"transaction_id": "unique transaction_id"
+      "amount": 1000,
+      "transaction_id": "unique transaction_id"
     }
     ```
   
