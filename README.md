@@ -44,9 +44,9 @@ curl localhost:8080 # RESTfulハンドラ使用時のヘルスチェック
 
 
 
-* ダーティリード、ファジーリード、ファントムリードについてはどう対処している？
+* Dirty Read、Non-Repeatable Read、Phantom Readについてはどう対処している？
 
-  PostgreSQLのデフォルトのトランザクション分離レベルは`READ COMMITTED`のため、ダーティリードは発生しない。ファジーリードとファントムリードは理論上発生しうるが、提供している機能では発生することが考えにくい。
+  PostgreSQLのデフォルトのトランザクション分離レベルは`READ COMMITTED`のため、Dirty Readは発生しない。 Non-Repeatable ReadとPhantom Readは理論上発生する可能性があるが、サービス内では特別な処置をしていないため、サービスの呼び出し側で対処する必要がある。
 
 
 
