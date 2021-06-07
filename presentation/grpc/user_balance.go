@@ -29,7 +29,7 @@ func NewGrpcUserBalanceHander(usecase domain.UserBalanceUsecase, app *App) *Grpc
 	}
 }
 
-// GetByUserID ユーザーIDでの残高を取得するRPC
+// GetBalanceByUserID ユーザーIDでの残高を取得するRPC
 func (h *GrpcUserBalanceHander) GetBalanceByUserID(ctx context.Context, req *proto.GetUserBalanceRequest) (*proto.GetUserBalanceResponse, error) {
 	resp := &proto.GetUserBalanceResponse{}
 	var err error
@@ -50,7 +50,7 @@ func (h *GrpcUserBalanceHander) GetBalanceByUserID(ctx context.Context, req *pro
 	return resp, st.Err()
 }
 
-// ChangeByUserID ユーザーIDで残高を更新するハンドラ
+// ChangeBalanceByUserID ユーザーIDで残高を更新するハンドラ
 func (h *GrpcUserBalanceHander) ChangeBalanceByUserID(ctx context.Context, req *proto.ChangeUserBalanceRequest) (*proto.EmptyResponse, error) {
 	resp := &proto.EmptyResponse{}
 	var err error
@@ -72,7 +72,7 @@ func (h *GrpcUserBalanceHander) ChangeBalanceByUserID(ctx context.Context, req *
 	return resp, st.Err()
 }
 
-// AddAll 残高を一斉に加算するハンドラ
+// AddAllUserBalance 残高を一斉に加算するハンドラ
 func (h *GrpcUserBalanceHander) AddAllUserBalance(ctx context.Context, req *proto.AddAllUserBalanceRequest) (*proto.EmptyResponse, error) {
 	resp := &proto.EmptyResponse{}
 
