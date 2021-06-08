@@ -1,14 +1,11 @@
 package presentation
 
 import (
-	"database/sql"
-	"errors"
 	"net/http"
 	"reflect"
 	"strings"
 
 	"github.com/go-playground/validator/v10"
-	"github.com/jackc/pgconn"
 )
 
 // handleError エラーからハンドラに必要な情報を吐き出すヘルパー
@@ -16,24 +13,18 @@ func handleError(err error) (string, string, int) {
 	var status string
 	var msg string
 	var httpCode int
-
-	var pgErr *pgconn.PgError
-
-	if errors.As(err, &pgErr) {
-		switch pgErr.Code {
-		case "23505":
-			msg = "transaction_id must be unique"
-			status = "fail"
-			httpCode = http.StatusUnprocessableEntity
-		default:
+	if err != nil {
+		if err.Error() == "database error" {
 			msg = "database error"
 			status = "error"
 			httpCode = http.StatusInternalServerError
-		}
-	} else {
-		if err == sql.ErrNoRows {
+		} else if err.Error() == "transaction_id must be unique" {
+			msg = "transaction_id must be unique"
 			status = "fail"
-			msg = "user_id not found"
+			httpCode = http.StatusUnprocessableEntity
+		} else if err.Error() == "user not found" {
+			status = "fail"
+			msg = "user not found"
 			httpCode = http.StatusNotFound
 		} else if err.Error() == "balance insufficient" {
 			status = "fail"

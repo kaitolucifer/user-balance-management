@@ -3,7 +3,6 @@ package presentation
 import (
 	"bytes"
 	"context"
-	"database/sql"
 	"encoding/json"
 	"errors"
 	"io"
@@ -17,7 +16,6 @@ import (
 	"time"
 
 	"github.com/go-chi/chi"
-	"github.com/jackc/pgconn"
 	"github.com/kaitolucifer/user-balance-management/domain"
 )
 
@@ -62,14 +60,12 @@ func (u *mockUsecase) AddBalance(userID string, amount int, transactionID string
 		}
 	}
 	if !userExist {
-		return sql.ErrNoRows
+		return errors.New("user not found")
 	}
 
 	for _, th := range u.transactionHistory {
 		if th.TransactionID == transactionID {
-			return &pgconn.PgError{
-				Code: "23505",
-			}
+			return errors.New("transaction_id must be unique")
 		}
 	}
 
@@ -86,14 +82,12 @@ func (u *mockUsecase) ReduceBalance(userID string, amount int, transactionID str
 		}
 	}
 	if !userExist {
-		return sql.ErrNoRows
+		return errors.New("user not found")
 	}
 
 	for _, th := range u.transactionHistory {
 		if th.TransactionID == transactionID {
-			return &pgconn.PgError{
-				Code: "23505",
-			}
+			return errors.New("transaction_id must be unique")
 		}
 	}
 
@@ -103,9 +97,7 @@ func (u *mockUsecase) ReduceBalance(userID string, amount int, transactionID str
 func (u *mockUsecase) AddAllUserBalance(amount int, transactionID string) error {
 	for _, th := range u.transactionHistory {
 		if th.TransactionID == transactionID {
-			return &pgconn.PgError{
-				Code: "23505",
-			}
+			return errors.New("transaction_id must be unique")
 		}
 	}
 
@@ -118,7 +110,7 @@ func (u *mockUsecase) GetBalance(userID string) (int, error) {
 			return ub.Balance, nil
 		}
 	}
-	return 0, sql.ErrNoRows
+	return 0, errors.New("user not found")
 }
 
 func TestMain(m *testing.M) {
@@ -188,8 +180,8 @@ func TestGetUserBalance(t *testing.T) {
 		{"existent user1", "test_user1", 10000, "success", "", http.StatusOK},
 		{"existent user2", "test_user2", 20000, "success", "", http.StatusOK},
 		{"existent user3", "test_user3", 30000, "success", "", http.StatusOK},
-		{"nonexistent user1", "unknown", 0, "fail", "user_id not found", http.StatusNotFound},
-		{"nonexistent user2", "someone", 0, "fail", "user_id not found", http.StatusNotFound},
+		{"nonexistent user1", "unknown", 0, "fail", "user not found", http.StatusNotFound},
+		{"nonexistent user2", "someone", 0, "fail", "user not found", http.StatusNotFound},
 		{"empty user id", "", 0, "fail", "user_id is empty", http.StatusBadRequest},
 	}
 
@@ -252,8 +244,8 @@ func TestAddUserBalance(t *testing.T) {
 		{"existent user1", "test_user1", 1000, "917cd5c0-0bfc-4283-bc88-b5de8ad13635", "success", "user balance has been added successfully", http.StatusOK},
 		{"existent user2", "test_user2", 10000, "917cd5c0-0bfc-4283-bc88-b5de8ad13635", "success", "user balance has been added successfully", http.StatusOK},
 		{"existent user3", "test_user3", 100000, "917cd5c0-0bfc-4283-bc88-b5de8ad13635", "success", "user balance has been added successfully", http.StatusOK},
-		{"nonexistent user1", "unknown", 1000, "917cd5c0-0bfc-4283-bc88-b5de8ad13635", "fail", "user_id not found", http.StatusNotFound},
-		{"nonexistent user2", "someone", 1000, "917cd5c0-0bfc-4283-bc88-b5de8ad13635", "fail", "user_id not found", http.StatusNotFound},
+		{"nonexistent user1", "unknown", 1000, "917cd5c0-0bfc-4283-bc88-b5de8ad13635", "fail", "user not found", http.StatusNotFound},
+		{"nonexistent user2", "someone", 1000, "917cd5c0-0bfc-4283-bc88-b5de8ad13635", "fail", "user not found", http.StatusNotFound},
 		{"duplicated transaction_id", "test_user5", 1000, "b8eb7ccc-6bc3-4be3-b7f8-e2701bf19a6b", "fail", "transaction_id must be unique", http.StatusUnprocessableEntity},
 		{"invalid amount1", "test_user3", -100, "917cd5c0-0bfc-4283-bc88-b5de8ad13635", "fail", "amount must be positive", http.StatusUnprocessableEntity},
 		{"invalid amount2", "test_user5", 0, "917cd5c0-0bfc-4283-bc88-b5de8ad13635", "fail", "amount must be positive", http.StatusUnprocessableEntity},
@@ -321,8 +313,8 @@ func TestReduceUserBalance(t *testing.T) {
 		{"existent user2", "test_user2", 10000, "917cd5c0-0bfc-4283-bc88-b5de8ad13635", "success", "user balance has been added successfully", http.StatusOK},
 		{"insuffcient balance1", "test_user4", 50000, "917cd5c0-0bfc-4283-bc88-b5de8ad13635", "fail", "user balance is insufficient", http.StatusUnprocessableEntity},
 		{"insuffcient balance2", "test_user5", 60000, "917cd5c0-0bfc-4283-bc88-b5de8ad13635", "fail", "user balance is insufficient", http.StatusUnprocessableEntity},
-		{"nonexistent user1", "unknown", 1000, "917cd5c0-0bfc-4283-bc88-b5de8ad13635", "fail", "user_id not found", http.StatusNotFound},
-		{"nonexistent user2", "someone", 1000, "917cd5c0-0bfc-4283-bc88-b5de8ad13635", "fail", "user_id not found", http.StatusNotFound},
+		{"nonexistent user1", "unknown", 1000, "917cd5c0-0bfc-4283-bc88-b5de8ad13635", "fail", "user not found", http.StatusNotFound},
+		{"nonexistent user2", "someone", 1000, "917cd5c0-0bfc-4283-bc88-b5de8ad13635", "fail", "user not found", http.StatusNotFound},
 		{"duplicated transaction_id", "test_user5", 1000, "b8eb7ccc-6bc3-4be3-b7f8-e2701bf19a6b", "fail", "transaction_id must be unique", http.StatusUnprocessableEntity},
 		{"invalid amount1", "test_user3", -100, "917cd5c0-0bfc-4283-bc88-b5de8ad13635", "fail", "amount must be positive", http.StatusUnprocessableEntity},
 		{"invalid amount2", "test_user5", 0, "917cd5c0-0bfc-4283-bc88-b5de8ad13635", "fail", "amount must be positive", http.StatusUnprocessableEntity},

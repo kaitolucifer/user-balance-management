@@ -1,24 +1,15 @@
 package presentation
 
 import (
-	"database/sql"
 	"errors"
 	"net/http"
 	"reflect"
 	"testing"
 
 	"github.com/go-playground/validator/v10"
-	"github.com/jackc/pgconn"
 )
 
 func TestHandleError(t *testing.T) {
-	pgErr1 := &pgconn.PgError{
-		Code: "23505",
-	}
-	pgErr2 := &pgconn.PgError{
-		Code: "00000",
-	}
-
 	cases := []struct {
 		Name             string
 		Err              error
@@ -26,9 +17,9 @@ func TestHandleError(t *testing.T) {
 		ExpectedStatus   string
 		ExpectedHTTPCode int
 	}{
-		{"duplicated transaction_id", pgErr1, "transaction_id must be unique", "fail", http.StatusUnprocessableEntity},
-		{"other postgresql error", pgErr2, "database error", "error", http.StatusInternalServerError},
-		{"sql no rows error", sql.ErrNoRows, "user_id not found", "fail", http.StatusNotFound},
+		{"duplicated transaction_id", errors.New("transaction_id must be unique"), "transaction_id must be unique", "fail", http.StatusUnprocessableEntity},
+		{"other postgresql error", errors.New("database error"), "database error", "error", http.StatusInternalServerError},
+		{"user not found", errors.New("user not found"), "user not found", "fail", http.StatusNotFound},
 		{"balance insufficient error", errors.New("balance insufficient"), "user balance is insufficient", "fail", http.StatusUnprocessableEntity},
 		{"update failed error", errors.New("update failed"), "update failed, please retry", "fail", http.StatusConflict},
 		{"other server error", errors.New("server error"), "internal server error", "error", http.StatusInternalServerError},

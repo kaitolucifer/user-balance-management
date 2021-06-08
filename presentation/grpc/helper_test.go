@@ -1,22 +1,13 @@
 package presentation
 
 import (
-	"database/sql"
 	"errors"
 	"testing"
 
-	"github.com/jackc/pgconn"
 	"google.golang.org/grpc/codes"
 )
 
 func TestHandleError(t *testing.T) {
-	pgErr1 := &pgconn.PgError{
-		Code: "23505",
-	}
-	pgErr2 := &pgconn.PgError{
-		Code: "00000",
-	}
-
 	cases := []struct {
 		Name         string
 		Err          error
@@ -27,9 +18,9 @@ func TestHandleError(t *testing.T) {
 		{"empty transaction_id", errors.New("transaction_id is empty"), "transaction_id is empty", codes.InvalidArgument},
 		{"non-positive amount", errors.New("amount must be positive"), "amount must be positive", codes.InvalidArgument},
 		{"0 amount", errors.New("amount can't be 0"), "amount can't be 0", codes.InvalidArgument},
-		{"duplicated transaction_id", pgErr1, "transaction_id must be unique", codes.AlreadyExists},
-		{"other postgresql error", pgErr2, "database error", codes.Internal},
-		{"sql no rows error", sql.ErrNoRows, "user_id not found", codes.NotFound},
+		{"duplicated transaction_id", errors.New("transaction_id must be unique"), "transaction_id must be unique", codes.AlreadyExists},
+		{"other postgresql error", errors.New("database error"), "database error", codes.Internal},
+		{"user not found", errors.New("user not found"), "user not found", codes.NotFound},
 		{"balance insufficient error", errors.New("balance insufficient"), "user balance is insufficient", codes.FailedPrecondition},
 		{"update failed error", errors.New("update failed"), "update failed, please retry", codes.Unavailable},
 		{"other server error", errors.New("server error"), "internal server error", codes.Internal},

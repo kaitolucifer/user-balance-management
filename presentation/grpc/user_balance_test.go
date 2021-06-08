@@ -2,7 +2,6 @@ package presentation
 
 import (
 	"context"
-	"database/sql"
 	"errors"
 	"io/ioutil"
 	"log"
@@ -11,7 +10,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/jackc/pgconn"
 	"github.com/kaitolucifer/user-balance-management/domain"
 	"github.com/kaitolucifer/user-balance-management/presentation/grpc/proto"
 	"google.golang.org/grpc/codes"
@@ -59,14 +57,12 @@ func (u *mockUsecase) AddBalance(userID string, amount int, transactionID string
 		}
 	}
 	if !userExist {
-		return sql.ErrNoRows
+		return errors.New("user not found")
 	}
 
 	for _, th := range u.transactionHistory {
 		if th.TransactionID == transactionID {
-			return &pgconn.PgError{
-				Code: "23505",
-			}
+			return errors.New("transaction_id must be unique")
 		}
 	}
 
@@ -83,14 +79,12 @@ func (u *mockUsecase) ReduceBalance(userID string, amount int, transactionID str
 		}
 	}
 	if !userExist {
-		return sql.ErrNoRows
+		return errors.New("user not found")
 	}
 
 	for _, th := range u.transactionHistory {
 		if th.TransactionID == transactionID {
-			return &pgconn.PgError{
-				Code: "23505",
-			}
+			return errors.New("transaction_id must be unique")
 		}
 	}
 
@@ -100,9 +94,7 @@ func (u *mockUsecase) ReduceBalance(userID string, amount int, transactionID str
 func (u *mockUsecase) AddAllUserBalance(amount int, transactionID string) error {
 	for _, th := range u.transactionHistory {
 		if th.TransactionID == transactionID {
-			return &pgconn.PgError{
-				Code: "23505",
-			}
+			return errors.New("transaction_id must be unique")
 		}
 	}
 
@@ -115,7 +107,7 @@ func (u *mockUsecase) GetBalance(userID string) (int, error) {
 			return ub.Balance, nil
 		}
 	}
-	return 0, sql.ErrNoRows
+	return 0, errors.New("user not found")
 }
 
 func TestMain(m *testing.M) {
@@ -140,8 +132,8 @@ func TestGetBalanceByUserID(t *testing.T) {
 		{"existent user1", "test_user1", 10000, "", codes.OK},
 		{"existent user2", "test_user2", 20000, "", codes.OK},
 		{"existent user3", "test_user3", 30000, "", codes.OK},
-		{"nonexistent user1", "unknown", 0, "user_id not found", codes.NotFound},
-		{"nonexistent user2", "someone", 0, "user_id not found", codes.NotFound},
+		{"nonexistent user1", "unknown", 0, "user not found", codes.NotFound},
+		{"nonexistent user2", "someone", 0, "user not found", codes.NotFound},
 		{"empty user id", "", 0, "user_id is empty", codes.InvalidArgument},
 	}
 
@@ -191,8 +183,8 @@ func TestChangeBalanceByUserID(t *testing.T) {
 		{"existent user3", "test_user3", 100000, "917cd5c0-0bfc-4283-bc88-b5de8ad13635", "", codes.OK},
 		{"existent user3", "test_user4", -10000, "917cd5c0-0bfc-4283-bc88-b5de8ad13635", "", codes.OK},
 		{"existent user3", "test_user5", -20000, "917cd5c0-0bfc-4283-bc88-b5de8ad13635", "", codes.OK},
-		{"nonexistent user1", "unknown", 1000, "917cd5c0-0bfc-4283-bc88-b5de8ad13635", "user_id not found", codes.NotFound},
-		{"nonexistent user2", "someone", 1000, "917cd5c0-0bfc-4283-bc88-b5de8ad13635", "user_id not found", codes.NotFound},
+		{"nonexistent user1", "unknown", 1000, "917cd5c0-0bfc-4283-bc88-b5de8ad13635", "user not found", codes.NotFound},
+		{"nonexistent user2", "someone", 1000, "917cd5c0-0bfc-4283-bc88-b5de8ad13635", "user not found", codes.NotFound},
 		{"duplicated transaction_id", "test_user5", 1000, "b8eb7ccc-6bc3-4be3-b7f8-e2701bf19a6b", "transaction_id must be unique", codes.AlreadyExists},
 		{"invalid amount2", "test_user5", 0, "917cd5c0-0bfc-4283-bc88-b5de8ad13635", "amount can't be 0", codes.InvalidArgument},
 		{"empty user id", "", 0, "917cd5c0-0bfc-4283-bc88-b5de8ad13635", "user_id is empty", codes.InvalidArgument},
@@ -230,11 +222,11 @@ func TestChangeBalanceByUserID(t *testing.T) {
 
 func TestAddAllUserBalance(t *testing.T) {
 	cases := []struct {
-		Name           string
-		Amount         int32
-		TransactionID  string
-		ExpectedMsg    string
-		ExpectedCode   codes.Code
+		Name          string
+		Amount        int32
+		TransactionID string
+		ExpectedMsg   string
+		ExpectedCode  codes.Code
 	}{
 		{"normal case1", 1000, "917cd5c0-0bfc-4283-bc88-b5de8ad13635", "", codes.OK},
 		{"normal case2", 10000, "917cd5c0-0bfc-4283-bc88-b5de8ad13635", "", codes.OK},

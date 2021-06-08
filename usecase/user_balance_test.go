@@ -1,11 +1,13 @@
 package usecase
 
 import (
+	"database/sql"
 	"errors"
 	"os"
 	"testing"
 	"time"
 
+	"github.com/jackc/pgconn"
 	"github.com/kaitolucifer/user-balance-management/domain"
 )
 
@@ -49,7 +51,7 @@ func (repo *mockRepository) GetUserBalanceByUserID(userID string) (domain.UserBa
 		}
 	}
 
-	return userBalance, errors.New("user not found")
+	return userBalance, sql.ErrNoRows
 }
 
 func (repo *mockRepository) AddUserBalanceByUserID(userID string, amount int, transactionID string) error {
@@ -60,12 +62,15 @@ func (repo *mockRepository) AddUserBalanceByUserID(userID string, amount int, tr
 		}
 	}
 	if !userExist {
-		return errors.New("user not found")
+		return sql.ErrNoRows
 	}
 
 	for _, th := range repo.transactionHistory {
 		if th.TransactionID == transactionID {
-			return errors.New("duplicated transaction_id")
+			pgErr := &pgconn.PgError{
+				Code: "23505",
+			}
+			return pgErr
 		}
 	}
 
@@ -81,7 +86,10 @@ func (repo *mockRepository) ReduceUserBalanceByUserID(userID string, amount int,
 
 	for _, th := range repo.transactionHistory {
 		if th.TransactionID == transactionID {
-			return errors.New("duplicated transaction_id")
+			pgErr := &pgconn.PgError{
+				Code: "23505",
+			}
+			return pgErr
 		}
 	}
 
@@ -91,7 +99,10 @@ func (repo *mockRepository) ReduceUserBalanceByUserID(userID string, amount int,
 func (repo *mockRepository) AddAllUserBalance(amount int, transactionID string) error {
 	for _, th := range repo.transactionHistory {
 		if th.TransactionID == transactionID {
-			return errors.New("duplicated transaction_id")
+			pgErr := &pgconn.PgError{
+				Code: "23505",
+			}
+			return pgErr
 		}
 	}
 
@@ -117,7 +128,7 @@ func TestAddBalance(t *testing.T) {
 		ExpectedErrMsg string
 	}{
 		{"existent user", "test_user1", 10000, "917cd5c0-0bfc-4283-bc88-b5de8ad13635", ""},
-		{"duplicated transaction_id", "test_user5", 50000, "b8eb7ccc-6bc3-4be3-b7f8-e2701bf19a6b", "duplicated transaction_id"},
+		{"transaction_id must be unique", "test_user5", 50000, "b8eb7ccc-6bc3-4be3-b7f8-e2701bf19a6b", "transaction_id must be unique"},
 		{"nonexistent user", "unknown", 10000, "917cd5c0-0bfc-4283-bc88-b5de8ad13635", "user not found"},
 	}
 
@@ -148,7 +159,7 @@ func TestReduceBalance(t *testing.T) {
 		ExpectedErrMsg string
 	}{
 		{"existent user", "test_user1", 10000, "917cd5c0-0bfc-4283-bc88-b5de8ad13635", ""},
-		{"duplicated transaction_id", "test_user5", 50000, "b8eb7ccc-6bc3-4be3-b7f8-e2701bf19a6b", "duplicated transaction_id"},
+		{"transaction_id must be unique", "test_user5", 50000, "b8eb7ccc-6bc3-4be3-b7f8-e2701bf19a6b", "transaction_id must be unique"},
 		{"insufficient balance", "test_user5", 60000, "917cd5c0-0bfc-4283-bc88-b5de8ad13635", "balance insufficient"},
 		{"nonexistent user", "unknown", 10000, "917cd5c0-0bfc-4283-bc88-b5de8ad13635", "user not found"},
 	}
@@ -179,7 +190,7 @@ func TestAddAllUserBalance(t *testing.T) {
 		ExpectedErrMsg string
 	}{
 		{"normal case", 10000, "917cd5c0-0bfc-4283-bc88-b5de8ad13635", ""},
-		{"duplicated transaction_id", 50000, "b8eb7ccc-6bc3-4be3-b7f8-e2701bf19a6b", "duplicated transaction_id"},
+		{"transaction_id must be unique", 50000, "b8eb7ccc-6bc3-4be3-b7f8-e2701bf19a6b", "transaction_id must be unique"},
 	}
 
 	for _, c := range cases {
