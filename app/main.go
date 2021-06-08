@@ -22,6 +22,7 @@ func main() {
 		grpcHandler.App.InfoLog.Printf("starting gRPC application on port %s\n", grpcPortNumber)
 		s := grpc.NewServer()
 		proto.RegisterUserBalanceServer(s, grpcHandler)
+		proto.RegisterHealthServer(s, grpcHealthCheckHandler)
 		grpcHandler.App.ErrorLog.Fatal(s.Serve(listener))
 	} else {
 		restfulHandler.App.InfoLog.Printf("starting RESTful application on port %s\n", restfulPortNumber)

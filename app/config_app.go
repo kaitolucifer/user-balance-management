@@ -26,6 +26,7 @@ var dbSSL = flag.String("dbssl", "disable", "use database ssl tunnel or not")
 var db infrastructure.DB
 var restfulHandler *RestfulHandler.RestfulUserBalanceHandler
 var grpcHandler *GrpcHandler.GrpcUserBalanceHander
+var grpcHealthCheckHandler *GrpcHandler.HealthCheckHandler
 var mux http.Handler
 
 func configApp() {
