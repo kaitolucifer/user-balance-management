@@ -13,6 +13,10 @@ type DB struct {
 	*sql.DB
 }
 
+type TX struct {
+	*sql.Tx
+}
+
 const maxOpenDBConn = 10
 const maxIdleDBConn = 5
 const maxDBConnLifetime = 5 * time.Minute

@@ -1,6 +1,7 @@
 package domain
 
 import (
+	"context"
 	"time"
 )
 
@@ -26,17 +27,22 @@ type TransactionHistoryModel struct {
 type TransactionType int
 
 const (
-    TypeAddUserBalance TransactionType = iota
-    TypeReduceUserBalance
-	TypeAddAllUserBalance
+	TransactionType_AddUserBalance TransactionType = iota
+	TransactionType_ReduceUserBalance
+	TransactionType_AddAllUserBalance
 )
 
 // UserBalanceRepository ユーザー残高管理repositoryのインタフェース
 type UserBalanceRepository interface {
-	GetUserBalanceByUserID(string) (UserBalanceModel, error)
-	AddUserBalanceByUserID(string, int, string) error
-	ReduceUserBalanceByUserID(string, int, string) error
-	AddAllUserBalance(int, string) error
+	GetCtxWithTimeout(time.Duration) (context.Context, context.CancelFunc)
+	BeginTx(context.Context) error
+	Commit() error
+	Rollback() error
+	InsertTransactionHistory(context.Context, string, string, TransactionType, int) error
+	QueryUserBalanceByUserID(context.Context, string) (UserBalanceModel, error)
+	AddUserBalanceByUserID(context.Context, string, int) error 
+	ReduceUserBalanceByUserID(context.Context, string, int) error
+	AddAllUserBalance(context.Context, int) error
 }
 
 // UserBalanceUsecase ユーザー残高管理usecaseのインタフェース

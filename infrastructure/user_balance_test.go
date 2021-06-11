@@ -7,6 +7,7 @@ import (
 	"strconv"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/jackc/pgconn"
 	"github.com/kaitolucifer/user-balance-management/domain"
@@ -49,7 +50,56 @@ func NewMockDatabase(file string) *DB {
 	return &DB{conn}
 }
 
-func TestGetUserBalanceByUserID(t *testing.T) {
+func TestInsertTransactionHistory(t *testing.T) {
+	cases := []struct {
+		Name            string
+		TransactionID   string
+		UserID          string
+		TransactionType domain.TransactionType
+		amount          int
+		ExpectedErrMsg  string
+	}{
+		{"add all user balance", "ab20818d-9889-4e6b-b32f-c2be401ec02d", "", domain.TransactionType_AddAllUserBalance, 10000, ""},
+		{"add user balance", "ab20818d-9889-4e6b-b32f-c2be401ec02d", "test_user1", domain.TransactionType_AddAllUserBalance, 10000, ""},
+		{"reduce user balance", "ab20818d-9889-4e6b-b32f-c2be401ec02d", "test_user5", domain.TransactionType_ReduceUserBalance, 10000, ""},
+		{"duplicated transaction_id", "b8eb7ccc-6bc3-4be3-b7f8-e2701bf19a6b", "test_user5", domain.TransactionType_ReduceUserBalance, 10000, "UNIQUE constraint failed: transaction_history.transaction_id"},
+	}
+
+	for i, c := range cases {
+		t.Run(c.Name, func(t *testing.T) {
+			file := "transaction-" + strconv.Itoa(i)
+			db := NewMockDatabase(file)
+			defer db.Close()
+			repo = NewUserBalanceRepository(*db)
+			ctx, cancel := repo.GetCtxWithTimeout(3 * time.Second)
+			defer cancel()
+			repo.BeginTx(ctx)
+			err := repo.InsertTransactionHistory(ctx, c.TransactionID, c.UserID, c.TransactionType, c.amount)
+			if err != nil {
+				repo.Rollback()
+				var pgErr *pgconn.PgError
+				if c.ExpectedErrMsg == "" {
+					t.Errorf("expect no error but got [%s]", err)
+				} else if errors.As(err, &pgErr) {
+					if pgErr.Message != c.ExpectedErrMsg {
+						t.Errorf("expect error [%s], got [%s]", c.ExpectedErrMsg, err)
+					}
+				} else {
+					if err.Error() != c.ExpectedErrMsg {
+						t.Errorf("expect error [%s], got [%s]", c.ExpectedErrMsg, err)
+					}
+				}
+			} else {
+				if c.ExpectedErrMsg != "" {
+					t.Errorf("expect error [%s] but got no one", c.ExpectedErrMsg)
+				}
+				repo.Commit()
+			}
+		})
+	}
+}
+
+func TestQueryUserBalanceByUserID(t *testing.T) {
 	cases := []struct {
 		Name            string
 		UserID          string
@@ -64,11 +114,13 @@ func TestGetUserBalanceByUserID(t *testing.T) {
 
 	for i, c := range cases {
 		t.Run(c.Name, func(t *testing.T) {
-			file := "get-" + strconv.Itoa(i)
+			file := "query-" + strconv.Itoa(i)
 			db := NewMockDatabase(file)
 			defer db.Close()
 			repo = NewUserBalanceRepository(*db)
-			userBalance, err := repo.GetUserBalanceByUserID(c.UserID)
+			ctx, cancel := repo.GetCtxWithTimeout(3 * time.Second)
+			defer cancel()
+			userBalance, err := repo.QueryUserBalanceByUserID(ctx, c.UserID)
 			if err != nil {
 				var pgErr *pgconn.PgError
 				if c.ExpectedErrMsg == "" {
@@ -100,14 +152,12 @@ func TestAddUserBalanceByUserID(t *testing.T) {
 		Name            string
 		UserID          string
 		Amount          int
-		TransactionID   string
 		ExpectedBalance int
 		ExpectedErrMsg  string
 	}{
-		{"existent user", "test_user1", 1000, "ab20818d-9889-4e6b-b32f-c2be401ec02d", 11000, ""},
-		{"duplicated transaction_id", "test_user1", 1000, "b8eb7ccc-6bc3-4be3-b7f8-e2701bf19a6b", 10000, "UNIQUE constraint failed: transaction_history.transaction_id"},
-		{"sql injection", "'; DROP TABLE user_balance;'", 0, "ab20818d-9889-4e6b-b32f-c2be401ec02d", 0, "sql: no rows in result set"},
-		{"nonexistent user", "unknown", 0, "ab20818d-9889-4e6b-b32f-c2be401ec02d", 0, "sql: no rows in result set"},
+		{"existent user", "test_user1", 1000, 11000, ""},
+		{"sql injection", "'; DROP TABLE user_balance;'", 0, 0, "sql: no rows in result set"},
+		{"nonexistent user", "unknown", 0, 0, "sql: no rows in result set"},
 	}
 
 	for i, c := range cases {
@@ -116,8 +166,12 @@ func TestAddUserBalanceByUserID(t *testing.T) {
 			db := NewMockDatabase(file)
 			defer db.Close()
 			repo = NewUserBalanceRepository(*db)
-			err := repo.AddUserBalanceByUserID(c.UserID, c.Amount, c.TransactionID)
+			ctx, cancel := repo.GetCtxWithTimeout(3 * time.Second)
+			defer cancel()
+			repo.BeginTx(ctx)
+			err := repo.AddUserBalanceByUserID(ctx, c.UserID, c.Amount)
 			if err != nil {
+				repo.Rollback()
 				var pgErr *pgconn.PgError
 				if c.ExpectedErrMsg == "" {
 					t.Errorf("expect no error but got [%s]", err)
@@ -135,6 +189,7 @@ func TestAddUserBalanceByUserID(t *testing.T) {
 					t.Errorf("expect error [%s] but got no one", c.ExpectedErrMsg)
 				}
 				// 更新後残高を検証
+				repo.Commit()
 				if !strings.HasPrefix(c.Name, "nonexistent") {
 					var balance int
 					row := db.QueryRow("SELECT balance FROM user_balance WHERE user_id = $1", c.UserID)
@@ -153,15 +208,13 @@ func TestReduceUserBalanceByUserID(t *testing.T) {
 		Name            string
 		UserID          string
 		Amount          int
-		TransactionID   string
 		ExpectedBalance int
 		ExpectedErrMsg  string
 	}{
-		{"existent user", "test_user1", 1000, "ab20818d-9889-4e6b-b32f-c2be401ec02d", 9000, ""},
-		{"duplicated transaction_id", "test_user1", 1000, "b8eb7ccc-6bc3-4be3-b7f8-e2701bf19a6b", 10000, "UNIQUE constraint failed: transaction_history.transaction_id"},
-		{"nonexistent user", "unknown", 0, "ab20818d-9889-4e6b-b32f-c2be401ec02d", 0, "update failed"},
-		{"sql injection", "'; DROP TABLE user_balance;'", 0, "ab20818d-9889-4e6b-b32f-c2be401ec02d", 0, "update failed"},
-		{"insufficient balance", "test_user5", 60000, "ab20818d-9889-4e6b-b32f-c2be401ec02d", 50000, "update failed"},
+		{"existent user", "test_user1", 1000, 9000, ""},
+		{"nonexistent user", "unknown", 0, 0, "update failed"},
+		{"sql injection", "'; DROP TABLE user_balance;'", 0, 0, "update failed"},
+		{"insufficient balance", "test_user5", 60000, 50000, "update failed"},
 	}
 
 	for i, c := range cases {
@@ -170,8 +223,12 @@ func TestReduceUserBalanceByUserID(t *testing.T) {
 			db := NewMockDatabase(file)
 			defer db.Close()
 			repo = NewUserBalanceRepository(*db)
-			err := repo.ReduceUserBalanceByUserID(c.UserID, c.Amount, c.TransactionID)
+			ctx, cancel := repo.GetCtxWithTimeout(3 * time.Second)
+			defer cancel()
+			repo.BeginTx(ctx)
+			err := repo.ReduceUserBalanceByUserID(ctx, c.UserID, c.Amount)
 			if err != nil {
+				repo.Rollback()
 				var pgErr *pgconn.PgError
 				if c.ExpectedErrMsg == "" {
 					t.Errorf("expect no error but got [%s]", err)
@@ -189,6 +246,7 @@ func TestReduceUserBalanceByUserID(t *testing.T) {
 					t.Errorf("expect error [%s] but got no one", c.ExpectedErrMsg)
 				}
 				// 更新後残高を検証
+				repo.Commit()
 				if !strings.HasPrefix(c.Name, "nonexistent") {
 					var balance int
 					row := db.QueryRow("SELECT balance FROM user_balance WHERE user_id = $1", c.UserID)
@@ -206,16 +264,12 @@ func TestAddAllUserBalance(t *testing.T) {
 	cases := []struct {
 		Name             string
 		Amount           int
-		TransactionID    string
 		ExpectedBalances map[string]int
 		ExpectedErrMsg   string
 	}{
-		{"normal case", 1000, "ab20818d-9889-4e6b-b32f-c2be401ec02d",
+		{"normal case", 1000,
 			map[string]int{"test_user1": 11000, "test_user2": 21000, "test_user3": 31000, "test_user4": 41000, "test_user5": 51000},
 			""},
-		{"duplicated transaction_id", 1000, "b8eb7ccc-6bc3-4be3-b7f8-e2701bf19a6b",
-			map[string]int{"test_user1": 10000, "test_user2": 20000, "test_user3": 30000, "test_user4": 40000, "test_user5": 50000},
-			"UNIQUE constraint failed: transaction_history.transaction_id"},
 	}
 
 	for i, c := range cases {
@@ -224,8 +278,12 @@ func TestAddAllUserBalance(t *testing.T) {
 			db := NewMockDatabase(file)
 			defer db.Close()
 			repo = NewUserBalanceRepository(*db)
-			err := repo.AddAllUserBalance(c.Amount, c.TransactionID)
+			ctx, cancel := repo.GetCtxWithTimeout(3 * time.Second)
+			defer cancel()
+			repo.BeginTx(ctx)
+			err := repo.AddAllUserBalance(ctx, c.Amount)
 			if err != nil {
+				repo.Rollback()
 				var pgErr *pgconn.PgError
 				if c.ExpectedErrMsg == "" {
 					t.Errorf("expect no error but got [%s]", err)
@@ -243,6 +301,7 @@ func TestAddAllUserBalance(t *testing.T) {
 					t.Errorf("expect error [%s] but got no one", c.ExpectedErrMsg)
 				}
 				// 更新後残高を検証
+				repo.Commit()
 				for userID, expectedBalance := range c.ExpectedBalances {
 					var balance int
 					row := db.QueryRow("SELECT balance FROM user_balance WHERE user_id = $1", userID)
