@@ -35,6 +35,10 @@ func handleError(err error) (string, string, int) {
 			status = "fail"
 			msg = "update failed, please retry"
 			httpCode = http.StatusConflict
+		} else if err.Error() == "current thread is not associated with a transaction" {
+			status = "fail"
+			msg = "current thread is not associated with a transaction"
+			httpCode = http.StatusInternalServerError
 		} else {
 			status = "error"
 			msg = "internal server error"

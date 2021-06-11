@@ -46,6 +46,10 @@ func (h *GrpcUserBalanceHander) GetBalanceByUserID(ctx context.Context, req *pro
 		}
 	}
 
+	if err != nil {
+		h.App.ErrorLog.Println(err)
+	}
+
 	st := handleError(err)
 	return resp, st.Err()
 }
@@ -62,10 +66,14 @@ func (h *GrpcUserBalanceHander) ChangeBalanceByUserID(ctx context.Context, req *
 		if req.Amount > 0 {
 			err = h.usecase.AddBalance(req.UserId, int(req.Amount), req.TransactionId)
 		} else if req.Amount < 0 {
-			err = h.usecase.ReduceBalance(req.UserId, int(req.Amount), req.TransactionId)
+			err = h.usecase.ReduceBalance(req.UserId, -int(req.Amount), req.TransactionId)
 		} else {
 			err = errors.New("amount can't be 0")
 		}
+	}
+
+	if err != nil {
+		h.App.ErrorLog.Println(err)
 	}
 
 	st := handleError(err)
@@ -83,6 +91,10 @@ func (h *GrpcUserBalanceHander) AddAllUserBalance(ctx context.Context, req *prot
 		err = errors.New("amount must be positive")
 	} else {
 		err = h.usecase.AddAllUserBalance(int(req.Amount), req.TransactionId)
+	}
+
+	if err != nil {
+		h.App.ErrorLog.Println(err)
 	}
 
 	st := handleError(err)

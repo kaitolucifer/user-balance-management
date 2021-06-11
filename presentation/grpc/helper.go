@@ -29,6 +29,8 @@ func handleError(err error) *status.Status {
 			st = status.New(codes.InvalidArgument, err.Error())
 		} else if err.Error() == "amount can't be 0" {
 			st = status.New(codes.InvalidArgument, err.Error())
+		} else if err.Error() == "current thread is not associated with a transaction" {
+			st = status.New(codes.Internal, err.Error())
 		} else {
 			st = status.New(codes.Internal, "internal server error")
 		}

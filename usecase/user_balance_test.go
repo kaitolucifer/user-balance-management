@@ -1,6 +1,7 @@
 package usecase
 
 import (
+	"context"
 	"database/sql"
 	"errors"
 	"os"
@@ -29,7 +30,7 @@ func NewMockRepository() domain.UserBalanceRepository {
 		{
 			TransactionID:   "b8eb7ccc-6bc3-4be3-b7f8-e2701bf19a6b",
 			UserID:          "test_user1",
-			TransactionType: domain.TypeAddUserBalance,
+			TransactionType: domain.TransactionType_AddUserBalance,
 			Amount:          5000,
 			CreatedAt:       time.Now(),
 			UpdatedAt:       time.Now(),
@@ -42,7 +43,36 @@ func NewMockRepository() domain.UserBalanceRepository {
 	}
 }
 
-func (repo *mockRepository) GetUserBalanceByUserID(userID string) (domain.UserBalanceModel, error) {
+func (repo *mockRepository) GetCtxWithTimeout(timeout time.Duration) (context.Context, context.CancelFunc) {
+	return context.WithTimeout(context.Background(), timeout)
+}
+
+func (repo *mockRepository) BeginTx(ctx context.Context) error {
+	return nil
+}
+
+func (repo *mockRepository) Commit() error {
+	return nil
+}
+
+func (repo *mockRepository) Rollback() error {
+	return nil
+}
+
+func (repo *mockRepository) InsertTransactionHistory(ctx context.Context, transactionID string, userID string, transactionType domain.TransactionType, amount int) error {
+	for _, th := range repo.transactionHistory {
+		if th.TransactionID == transactionID {
+			pgErr := &pgconn.PgError{
+				Code: "23505",
+			}
+			return pgErr
+		}
+	}
+
+	return nil
+}
+
+func (repo *mockRepository) QueryUserBalanceByUserID(ctx context.Context, userID string) (domain.UserBalanceModel, error) {
 	var userBalance domain.UserBalanceModel
 
 	for _, ub := range repo.userBalance {
@@ -54,7 +84,7 @@ func (repo *mockRepository) GetUserBalanceByUserID(userID string) (domain.UserBa
 	return userBalance, sql.ErrNoRows
 }
 
-func (repo *mockRepository) AddUserBalanceByUserID(userID string, amount int, transactionID string) error {
+func (repo *mockRepository) AddUserBalanceByUserID(ctx context.Context, userID string, amount int) error {
 	userExist := false
 	for _, ub := range repo.userBalance {
 		if ub.UserID == userID {
@@ -65,47 +95,20 @@ func (repo *mockRepository) AddUserBalanceByUserID(userID string, amount int, tr
 		return sql.ErrNoRows
 	}
 
-	for _, th := range repo.transactionHistory {
-		if th.TransactionID == transactionID {
-			pgErr := &pgconn.PgError{
-				Code: "23505",
-			}
-			return pgErr
-		}
-	}
-
 	return nil
 }
 
-func (repo *mockRepository) ReduceUserBalanceByUserID(userID string, amount int, transactionID string) error {
+func (repo *mockRepository) ReduceUserBalanceByUserID(ctx context.Context, userID string, amount int) error {
 	for _, ub := range repo.userBalance {
 		if ub.UserID == userID && ub.Balance-amount < 0 {
 			return errors.New("update failed")
 		}
 	}
 
-	for _, th := range repo.transactionHistory {
-		if th.TransactionID == transactionID {
-			pgErr := &pgconn.PgError{
-				Code: "23505",
-			}
-			return pgErr
-		}
-	}
-
 	return nil
 }
 
-func (repo *mockRepository) AddAllUserBalance(amount int, transactionID string) error {
-	for _, th := range repo.transactionHistory {
-		if th.TransactionID == transactionID {
-			pgErr := &pgconn.PgError{
-				Code: "23505",
-			}
-			return pgErr
-		}
-	}
-
+func (repo *mockRepository) AddAllUserBalance(ctx context.Context, amount int) error {
 	return nil
 }
 

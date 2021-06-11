@@ -36,7 +36,7 @@ func NewMockUsecase() domain.UserBalanceUsecase {
 		{
 			TransactionID:   "b8eb7ccc-6bc3-4be3-b7f8-e2701bf19a6b",
 			UserID:          "test_user1",
-			TransactionType: domain.TypeAddUserBalance,
+			TransactionType: domain.TransactionType_AddUserBalance,
 			Amount:          5000,
 			CreatedAt:       time.Now(),
 			UpdatedAt:       time.Now(),
