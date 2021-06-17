@@ -27,7 +27,7 @@ curl localhost:8080 # RESTfulハンドラ使用時のヘルスチェック
 
 * RESTfulハンドラとgRPCハンドラの切り替え方法は？
 
-  デフォルトはgRPアンドラを使用する。`Dockerfile`の`CMD ["./webapp", "-dbhost", "db"]`を`CMD ["./webapp", "-dbhost", "db", "-use_grpc=false"]`に、`docker-compose.yml`で解放ポートを8080に変更すればRESTfulハンドラに切り替えられる。
+  デフォルトはgRPCハンドラを使用する。`Dockerfile`の`CMD ["./webapp", "-dbhost", "db"]`を`CMD ["./webapp", "-dbhost", "db", "-use_grpc=false"]`に、`docker-compose.yml`で解放ポートを8080に変更すればRESTfulハンドラに切り替えられる。
 
   
 
